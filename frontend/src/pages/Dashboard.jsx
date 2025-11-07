@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
-import { removeToken, getUserRole } from '../utils/auth'
+import { removeToken, getUserRole, getSelectedEmpresaId, setSelectedEmpresaId, getUserEmpresaId } from '../utils/auth'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import CarroCard from '../components/CarroCard'
 import CarroForm from '../components/CarroForm'
 import { canCreateCarro, canEditCarro, canDeleteCarro, canManageEmpresas } from '../utils/permissions'
-import { FaCar, FaSignOutAlt, FaPlus, FaUser, FaBuilding, FaSearch, FaTachometerAlt, FaCalendarAlt, FaFilter } from 'react-icons/fa'
+import { FaCar, FaSignOutAlt, FaPlus, FaUser, FaBuilding, FaSearch, FaTachometerAlt, FaCalendarAlt, FaFilter, FaKey } from 'react-icons/fa'
 
 function Dashboard({ setIsAuthenticated }) {
   const [carros, setCarros] = useState([])
@@ -27,17 +27,72 @@ function Dashboard({ setIsAuthenticated }) {
     tamanho: 20
   })
   const [totalPages, setTotalPages] = useState(0)
+  const [empresas, setEmpresas] = useState([])
+  const [empresaSelecionada, setEmpresaSelecionada] = useState(null)
+  const [inicializado, setInicializado] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
-    const role = getUserRole()
-    setUserRole(role)
-    carregarCarros()
+    const inicializar = async () => {
+      const role = getUserRole()
+      setUserRole(role)
+      
+      // Inicializar empresa selecionada
+      const empresaId = getSelectedEmpresaId() || getUserEmpresaId()
+      if (empresaId) {
+        setEmpresaSelecionada(empresaId)
+      }
+      
+      // Se for admin, carregar lista de empresas primeiro
+      if (role === 'ADMIN') {
+        await carregarEmpresas()
+      }
+      
+      // Carregar carros
+      carregarCarros()
+      setInicializado(true)
+    }
+    
+    inicializar()
   }, [])
+
+  useEffect(() => {
+    // Recarregar carros quando trocar de empresa (apenas se já tiver inicializado)
+    if (inicializado && empresaSelecionada && userRole) {
+      carregarCarros()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [empresaSelecionada])
+
+  const carregarEmpresas = async () => {
+    try {
+      const response = await api.get('/empresas')
+      setEmpresas(response.data)
+      
+      // Se não tiver empresa selecionada, usar a primeira ou a do usuário
+      if (response.data.length > 0) {
+        const empresaIdSalva = getSelectedEmpresaId()
+        const empresaIdUsuario = getUserEmpresaId()
+        const empresaId = empresaIdSalva || empresaIdUsuario || response.data[0].id
+        
+        setEmpresaSelecionada(empresaId)
+        setSelectedEmpresaId(empresaId)
+      }
+    } catch (error) {
+      console.error('Erro ao carregar empresas:', error)
+    }
+  }
 
   const carregarCarros = async () => {
     try {
-      const response = await api.get('/carros')
+      setLoading(true)
+      const params = {}
+      // Se for admin e tiver empresa selecionada, passar como parâmetro
+      if (userRole === 'ADMIN' && empresaSelecionada) {
+        params.empresaId = empresaSelecionada
+      }
+      
+      const response = await api.get('/carros', { params })
       setCarros(response.data)
     } catch (error) {
       console.error('Erro ao carregar carros:', error)
@@ -74,7 +129,13 @@ function Dashboard({ setIsAuthenticated }) {
         tamanho: filtros.tamanho
       }
       
-      const response = await api.post('/carros/buscar', buscaDTO)
+      // Se for admin e tiver empresa selecionada, passar como parâmetro
+      const params = {}
+      if (userRole === 'ADMIN' && empresaSelecionada) {
+        params.empresaId = empresaSelecionada
+      }
+      
+      const response = await api.post('/carros/buscar', buscaDTO, { params })
       setCarros(response.data.content || [])
       setTotalPages(response.data.totalPages || 0)
       setLoading(false)
@@ -82,6 +143,13 @@ function Dashboard({ setIsAuthenticated }) {
       console.error('Erro ao buscar carros:', error)
       setLoading(false)
     }
+  }
+
+  const handleEmpresaChange = (empresaId) => {
+    const id = empresaId ? parseInt(empresaId) : null
+    setEmpresaSelecionada(id)
+    setSelectedEmpresaId(id)
+    // Os carros serão recarregados automaticamente pelo useEffect
   }
 
   const handleFiltroChange = (field, value) => {
@@ -129,7 +197,12 @@ function Dashboard({ setIsAuthenticated }) {
   const handleDeletarCarro = async (id) => {
     if (window.confirm('Tem certeza que deseja deletar este carro?')) {
       try {
-        await api.delete(`/carros/${id}`)
+        const params = {}
+        // Se for admin e tiver empresa selecionada, passar como parâmetro
+        if (userRole === 'ADMIN' && empresaSelecionada) {
+          params.empresaId = empresaSelecionada
+        }
+        await api.delete(`/carros/${id}`, { params })
         carregarCarros()
       } catch (error) {
         console.error('Erro ao deletar carro:', error)
@@ -149,6 +222,29 @@ function Dashboard({ setIsAuthenticated }) {
               <h1 className="text-3xl font-bold text-white">BANCO AI</h1>
             </div>
             <div className="flex items-center space-x-4">
+              {userRole === 'ADMIN' && empresas.length > 0 && (
+                <div className="relative flex items-center space-x-2">
+                  <FaBuilding className="text-red-600 text-lg" />
+                  <label className="text-white text-sm font-medium">Empresa:</label>
+                  <select
+                    value={empresaSelecionada || ''}
+                    onChange={(e) => handleEmpresaChange(e.target.value)}
+                    className="bg-black text-white px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 transition-all duration-200 cursor-pointer appearance-none pr-8 min-w-[200px]"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ef4444' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 0.75rem center',
+                      backgroundSize: '12px'
+                    }}
+                  >
+                    {empresas.map((empresa) => (
+                      <option key={empresa.id} value={empresa.id} className="bg-black">
+                        {empresa.nome}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               {canCreateCarro(userRole) && (
                 <button
                   onClick={handleNovoCarro}
@@ -173,6 +269,13 @@ function Dashboard({ setIsAuthenticated }) {
               >
                 <FaUser />
                 <span>Perfil</span>
+              </button>
+              <button
+                onClick={() => navigate('/configuracoes')}
+                className="text-white hover:text-red-600 flex items-center space-x-2 transition-colors"
+              >
+                <FaKey />
+                <span>Configurações</span>
               </button>
               <button
                 onClick={handleLogout}

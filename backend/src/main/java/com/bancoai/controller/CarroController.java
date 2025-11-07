@@ -39,17 +39,28 @@ public class CarroController {
         return usuarioService.obterUsuarioCompleto(email).getEmpresa().getId();
     }
     
+    private Long obterEmpresaIdParaFiltro(Authentication authentication, Long empresaIdSelecionada) {
+        String email = authentication.getName();
+        // Se for admin e tiver selecionado uma empresa, usar a selecionada
+        if (usuarioService.isAdmin(email) && empresaIdSelecionada != null) {
+            return empresaIdSelecionada;
+        }
+        // Caso contrário, usar a empresa do usuário
+        return obterEmpresaId(authentication);
+    }
+    
     @PostMapping
     public ResponseEntity<CarroDTO> criarCarro(
             @RequestPart("carro") CarroDTO carroDTO,
             @RequestPart(value = "fotos", required = false) List<MultipartFile> fotos,
+            @RequestParam(value = "empresaId", required = false) Long empresaIdSelecionada,
             Authentication authentication) {
         try {
             String email = authentication.getName();
             if (!usuarioService.podeCriar(email)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
-            Long empresaId = obterEmpresaId(authentication);
+            Long empresaId = obterEmpresaIdParaFiltro(authentication, empresaIdSelecionada);
             String usuarioEmail = authentication.getName();
             CarroDTO carroCriado = carroService.criarCarro(carroDTO, fotos, empresaId, usuarioEmail);
             return ResponseEntity.status(HttpStatus.CREATED).body(carroCriado);
@@ -59,9 +70,11 @@ public class CarroController {
     }
     
     @GetMapping
-    public ResponseEntity<List<CarroDTO>> listarTodos(Authentication authentication) {
+    public ResponseEntity<List<CarroDTO>> listarTodos(
+            @RequestParam(value = "empresaId", required = false) Long empresaIdSelecionada,
+            Authentication authentication) {
         try {
-            Long empresaId = obterEmpresaId(authentication);
+            Long empresaId = obterEmpresaIdParaFiltro(authentication, empresaIdSelecionada);
             List<CarroDTO> carros = carroService.listarTodos(empresaId);
             return ResponseEntity.ok(carros);
         } catch (RuntimeException e) {
@@ -72,9 +85,10 @@ public class CarroController {
     @PostMapping("/buscar")
     public ResponseEntity<Page<CarroDTO>> buscarComFiltros(
             @RequestBody BuscaCarroDTO buscaDTO,
+            @RequestParam(value = "empresaId", required = false) Long empresaIdSelecionada,
             Authentication authentication) {
         try {
-            Long empresaId = obterEmpresaId(authentication);
+            Long empresaId = obterEmpresaIdParaFiltro(authentication, empresaIdSelecionada);
             Page<CarroDTO> carros = carroService.buscarComFiltros(buscaDTO, empresaId);
             return ResponseEntity.ok(carros);
         } catch (RuntimeException e) {
@@ -83,9 +97,12 @@ public class CarroController {
     }
     
     @GetMapping("/{id}")
-    public ResponseEntity<CarroDTO> buscarPorId(@PathVariable Long id, Authentication authentication) {
+    public ResponseEntity<CarroDTO> buscarPorId(
+            @PathVariable Long id,
+            @RequestParam(value = "empresaId", required = false) Long empresaIdSelecionada,
+            Authentication authentication) {
         try {
-            Long empresaId = obterEmpresaId(authentication);
+            Long empresaId = obterEmpresaIdParaFiltro(authentication, empresaIdSelecionada);
             CarroDTO carro = carroService.buscarPorId(id, empresaId);
             return ResponseEntity.ok(carro);
         } catch (RuntimeException e) {
@@ -98,13 +115,14 @@ public class CarroController {
             @PathVariable Long id,
             @RequestPart("carro") CarroDTO carroDTO,
             @RequestPart(value = "fotos", required = false) List<MultipartFile> novasFotos,
+            @RequestParam(value = "empresaId", required = false) Long empresaIdSelecionada,
             Authentication authentication) {
         try {
             String email = authentication.getName();
             if (!usuarioService.podeEditar(email)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
-            Long empresaId = obterEmpresaId(authentication);
+            Long empresaId = obterEmpresaIdParaFiltro(authentication, empresaIdSelecionada);
             String usuarioEmail = authentication.getName();
             CarroDTO carroAtualizado = carroService.atualizarCarro(id, carroDTO, novasFotos, empresaId, usuarioEmail);
             return ResponseEntity.ok(carroAtualizado);
@@ -114,13 +132,16 @@ public class CarroController {
     }
     
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletarCarro(@PathVariable Long id, Authentication authentication) {
+    public ResponseEntity<Void> deletarCarro(
+            @PathVariable Long id,
+            @RequestParam(value = "empresaId", required = false) Long empresaIdSelecionada,
+            Authentication authentication) {
         try {
             String email = authentication.getName();
             if (!usuarioService.podeDeletar(email)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
-            Long empresaId = obterEmpresaId(authentication);
+            Long empresaId = obterEmpresaIdParaFiltro(authentication, empresaIdSelecionada);
             String usuarioEmail = authentication.getName();
             carroService.deletarCarro(id, empresaId, usuarioEmail);
             return ResponseEntity.noContent().build();

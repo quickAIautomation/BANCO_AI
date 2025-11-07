@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard'
 import Perfil from './pages/Perfil'
 import Empresas from './pages/Empresas'
 import Usuarios from './pages/Usuarios'
+import Configuracoes from './pages/Configuracoes'
 import EsqueceuSenha from './pages/EsqueceuSenha'
 import ResetSenha from './pages/ResetSenha'
 import { getToken } from './utils/auth'
@@ -66,6 +67,12 @@ function App() {
           path="/usuarios" 
           element={
             isAuthenticated ? <Usuarios setIsAuthenticated={setIsAuthenticated} /> : <Navigate to="/login" />
+          } 
+        />
+        <Route 
+          path="/configuracoes" 
+          element={
+            isAuthenticated ? <Configuracoes setIsAuthenticated={setIsAuthenticated} /> : <Navigate to="/login" />
           } 
         />
         <Route path="/" element={<Navigate to="/dashboard" />} />

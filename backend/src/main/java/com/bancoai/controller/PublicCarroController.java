@@ -41,10 +41,11 @@ public class PublicCarroController {
     
     /**
      * Endpoint público para listar todos os carros com todas as informações
-     * Acessível via HTTP request sem autenticação
+     * Requer autenticação via X-API-Key no header
      * 
      * Exemplo de uso no n8n:
      * GET http://localhost:8080/api/public/carros
+     * Header: X-API-Key: sua_chave_api_aqui
      * 
      * @param request HttpServletRequest para obter a URL base
      * @return Lista de todos os carros com informações completas
@@ -65,9 +66,11 @@ public class PublicCarroController {
     
     /**
      * Endpoint público para buscar um carro específico por ID
+     * Requer autenticação via X-API-Key no header
      * 
      * Exemplo de uso no n8n:
      * GET http://localhost:8080/api/public/carros/1
+     * Header: X-API-Key: sua_chave_api_aqui
      * 
      * @param id ID do carro
      * @param request HttpServletRequest para obter a URL base
@@ -87,9 +90,11 @@ public class PublicCarroController {
     
     /**
      * Endpoint público para buscar carro por placa
+     * Requer autenticação via X-API-Key no header
      * 
      * Exemplo de uso no n8n:
      * GET http://localhost:8080/api/public/carros/placa/ABC1234
+     * Header: X-API-Key: sua_chave_api_aqui
      * 
      * @param placa Placa do carro
      * @param request HttpServletRequest para obter a URL base

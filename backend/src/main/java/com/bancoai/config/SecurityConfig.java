@@ -1,5 +1,6 @@
 package com.bancoai.config;
 
+import com.bancoai.security.ApiKeyAuthenticationFilter;
 import com.bancoai.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,9 +23,12 @@ import java.util.List;
 public class SecurityConfig {
     
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final ApiKeyAuthenticationFilter apiKeyAuthenticationFilter;
     
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, 
+                          ApiKeyAuthenticationFilter apiKeyAuthenticationFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.apiKeyAuthenticationFilter = apiKeyAuthenticationFilter;
     }
     
     @Bean
@@ -35,11 +39,13 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/carros/public/**").permitAll()
-                .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers("/api/carros/fotos/**").permitAll()
+                // API pública agora requer autenticação (JWT ou X-API-Key)
+                .requestMatchers("/api/public/**").authenticated()
                 .anyRequest().authenticated()
             )
+            // API Key filter primeiro, depois JWT
+            .addFilterBefore(apiKeyAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         
         return http.build();
@@ -55,11 +61,11 @@ public class SecurityConfig {
         configuration.setAllowCredentials(true);
         configuration.setExposedHeaders(List.of("Authorization"));
         
-        // Configuração específica para API pública (permite qualquer origem)
+        // Configuração específica para API pública (permite qualquer origem, mas requer X-API-Key)
         CorsConfiguration publicApiConfiguration = new CorsConfiguration();
         publicApiConfiguration.setAllowedOriginPatterns(List.of("*"));
         publicApiConfiguration.setAllowedMethods(Arrays.asList("GET", "OPTIONS"));
-        publicApiConfiguration.setAllowedHeaders(List.of("*"));
+        publicApiConfiguration.setAllowedHeaders(Arrays.asList("X-API-Key", "Authorization", "Content-Type"));
         publicApiConfiguration.setAllowCredentials(false);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

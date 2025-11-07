@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
-import { setToken, setUserRole } from '../utils/auth'
+import { setToken, setUserRole, setUserEmpresaId, setUserEmpresaNome, setSelectedEmpresaId } from '../utils/auth'
 import { FaCar } from 'react-icons/fa'
 
 function Login({ setIsAuthenticated }) {
@@ -21,6 +21,16 @@ function Login({ setIsAuthenticated }) {
       setToken(response.data.token)
       if (response.data.role) {
         setUserRole(response.data.role)
+      }
+      if (response.data.empresaId) {
+        setUserEmpresaId(response.data.empresaId)
+      }
+      if (response.data.empresaNome) {
+        setUserEmpresaNome(response.data.empresaNome)
+      }
+      // Se for admin, inicializar com a empresa do usuário
+      if (response.data.role === 'ADMIN' && response.data.empresaId) {
+        setSelectedEmpresaId(response.data.empresaId)
       }
       setIsAuthenticated(true)
       navigate('/dashboard')

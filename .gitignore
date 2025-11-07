@@ -67,3 +67,12 @@ yarn-error.log*
 *.swo
 *~
 
+# Production build files
+backend/target/
+frontend/dist/
+frontend/.env.production
+frontend/.env.local
+
+# Scripts temporários (opcional - descomente se não quiser commitá-los)
+# setup-and-run-backend.ps1
+

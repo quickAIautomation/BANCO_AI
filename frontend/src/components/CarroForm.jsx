@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import api from '../services/api'
+import { getUserRole, getSelectedEmpresaId } from '../utils/auth'
 import { FaTimes, FaUpload } from 'react-icons/fa'
 
 function CarroForm({ carro, onClose, onSuccess }) {
@@ -70,19 +71,31 @@ function CarroForm({ carro, onClose, onSuccess }) {
         formDataToSend.append('fotos', foto)
       })
 
+      // Se for admin, adicionar empresaId como parâmetro
+      const params = {}
+      const userRole = getUserRole()
+      if (userRole === 'ADMIN') {
+        const empresaId = getSelectedEmpresaId()
+        if (empresaId) {
+          params.empresaId = empresaId
+        }
+      }
+
       if (carro) {
         // Atualizar
         await api.put(`/carros/${carro.id}`, formDataToSend, {
           headers: {
             'Content-Type': 'multipart/form-data'
-          }
+          },
+          params
         })
       } else {
         // Criar
         await api.post('/carros', formDataToSend, {
           headers: {
             'Content-Type': 'multipart/form-data'
-          }
+          },
+          params
         })
       }
 
