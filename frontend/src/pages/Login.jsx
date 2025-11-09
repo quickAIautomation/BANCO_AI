@@ -18,6 +18,7 @@ function Login({ setIsAuthenticated }) {
 
     try {
       const response = await api.post('/auth/login', { email, senha })
+      console.log('Login response:', response.data)
       setToken(response.data.token)
       if (response.data.role) {
         setUserRole(response.data.role)
@@ -35,7 +36,18 @@ function Login({ setIsAuthenticated }) {
       setIsAuthenticated(true)
       navigate('/dashboard')
     } catch (error) {
-      setErro('Credenciais inválidas. Tente novamente.')
+      console.error('Login error:', error)
+      console.error('Error response:', error.response)
+      console.error('Error data:', error.response?.data)
+      console.error('Error status:', error.response?.status)
+      console.error('API Base URL:', import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api')
+      
+      // Mostrar mensagem de erro do backend ou mensagem genérica
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data || 
+                          error.message || 
+                          'Credenciais inválidas. Tente novamente.'
+      setErro(typeof errorMessage === 'string' ? errorMessage : 'Credenciais inválidas. Tente novamente.')
     } finally {
       setLoading(false)
     }
