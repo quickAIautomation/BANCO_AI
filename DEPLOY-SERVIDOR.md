@@ -68,12 +68,12 @@ sudo cp /var/www/banco-ai/banco-ai.service /etc/systemd/system/
 # IMPORTANTE: Editar o arquivo e ajustar as variáveis de ambiente
 sudo nano /etc/systemd/system/banco-ai.service
 
-# As credenciais do PostgreSQL já estão configuradas:
-# - Host: 5.161.206.196
-# - Porta: 5434
-# - Banco: banco_ai
-# - Usuário: postgres
-# - Senha: #QuickAI12345
+# IMPORTANTE: Configure as credenciais do PostgreSQL no arquivo:
+# Edite /etc/systemd/system/banco-ai.service e configure:
+# - DATABASE_HOST (host do PostgreSQL)
+# - DATABASE_PORT (porta do PostgreSQL)
+# - DATABASE_USER (usuário do PostgreSQL)
+# - DATABASE_PASSWORD (senha do PostgreSQL)
 
 # Recarregar e iniciar serviço
 sudo systemctl daemon-reload
@@ -219,13 +219,15 @@ sudo systemctl restart banco-ai
 sudo systemctl restart apache2
 ```
 
-## 📝 Credenciais Configuradas
+## 📝 Configuração de Credenciais
 
-- **PostgreSQL Host:** 5.161.206.196
-- **PostgreSQL Porta:** 5434
+⚠️ **IMPORTANTE:** Configure as credenciais do PostgreSQL no arquivo de serviço ou via variáveis de ambiente no servidor.
+
+- **PostgreSQL Host:** Configure via `DATABASE_HOST` no arquivo de serviço
+- **PostgreSQL Porta:** Configure via `DATABASE_PORT` no arquivo de serviço
 - **PostgreSQL Banco:** banco_ai
-- **PostgreSQL Usuário:** postgres
-- **PostgreSQL Senha:** #QuickAI12345
+- **PostgreSQL Usuário:** Configure via `DATABASE_USER` no arquivo de serviço
+- **PostgreSQL Senha:** Configure via `DATABASE_PASSWORD` no arquivo de serviço
 
 ## 🆘 Troubleshooting
 
@@ -239,9 +241,10 @@ sudo systemctl show banco-ai | grep Environment
 ```
 
 ### Erro de conexão com PostgreSQL
-- Verifique se o IP 5.161.206.196 está acessível do servidor
-- Verifique se a porta 5434 está aberta no firewall
-- Teste conexão: `telnet 5.161.206.196 5434`
+- Verifique se o host do PostgreSQL está acessível do servidor
+- Verifique se a porta está aberta no firewall
+- Teste conexão: `telnet SEU_HOST_POSTGRES SEU_PORTA`
+- Verifique as credenciais no arquivo `/etc/systemd/system/banco-ai.service`
 
 ### Apache não serve o frontend
 - Verifique permissões: `ls -la /var/www/banco-ai/frontend/dist`

@@ -1,12 +1,14 @@
 # Configuração do Servidor - BANCO AI
 
-## Credenciais do PostgreSQL Configuradas
+## Credenciais do PostgreSQL
 
-- **Host:** 5.161.206.196
-- **Porta:** 5434
+⚠️ **IMPORTANTE:** Configure as credenciais do PostgreSQL no servidor através de variáveis de ambiente ou edite o arquivo de serviço diretamente.
+
+- **Host:** Configure via variável `DATABASE_HOST`
+- **Porta:** Configure via variável `DATABASE_PORT`
 - **Banco de Dados:** banco_ai
-- **Usuário:** postgres
-- **Senha:** #QuickAI12345
+- **Usuário:** Configure via variável `DATABASE_USER`
+- **Senha:** Configure via variável `DATABASE_PASSWORD`
 
 ## Comandos para Configurar no Servidor
 
@@ -47,6 +49,7 @@ sudo journalctl -u banco-ai -f
 ```
 
 Se houver erros de conexão, verifique:
+
 - Se o IP 5.161.206.196 está acessível do servidor
 - Se a porta 5434 está aberta no firewall do servidor PostgreSQL
 - Se as credenciais estão corretas
@@ -58,8 +61,8 @@ Se houver erros de conexão, verifique:
 sudo apt install postgresql-client -y
 
 # Testar conexão
-psql -h 5.161.206.196 -p 5434 -U postgres -d banco_ai
-# Digite a senha quando solicitado: #QuickAI12345
+psql -h SEU_HOST_POSTGRES -p SEU_PORTA -U SEU_USUARIO -d banco_ai
+# Digite a senha quando solicitado
 ```
 
 ## Configuração do Apache
@@ -85,9 +88,9 @@ sudo systemctl restart apache2
 
 As seguintes variáveis estão configuradas no serviço:
 
-- `DATABASE_URL=jdbc:postgresql://5.161.206.196:5434/banco_ai`
-- `DATABASE_USER=postgres`
-- `DATABASE_PASSWORD=#QuickAI12345`
+- `DATABASE_URL=jdbc:postgresql://SEU_HOST:SEU_PORTA/banco_ai`
+- `DATABASE_USER=seu_usuario`
+- `DATABASE_PASSWORD=sua_senha`
 - `JWT_SECRET=bancoAiSecretKey2024SuperSecureKeyForJWTTokenGenerationChangeThisInProduction` ⚠️ **Altere em produção!**
 - `FRONTEND_URL=https://seu-dominio.com` ⚠️ **Ajuste com seu domínio!**
 - `UPLOAD_DIR=/var/www/banco-ai/backend/uploads/carros`
@@ -95,6 +98,7 @@ As seguintes variáveis estão configuradas no serviço:
 ## Importante
 
 ⚠️ **Lembre-se de alterar:**
+
 1. `JWT_SECRET` para uma chave secreta forte e única
 2. `FRONTEND_URL` para o domínio real do seu servidor
 3. Configurar credenciais de email se necessário
@@ -105,12 +109,12 @@ As seguintes variáveis estão configuradas no serviço:
 
 ```bash
 # Verificar se o IP está acessível
-ping 5.161.206.196
+ping SEU_HOST_POSTGRES
 
 # Verificar se a porta está aberta
-telnet 5.161.206.196 5434
+telnet SEU_HOST_POSTGRES SEU_PORTA
 # OU
-nc -zv 5.161.206.196 5434
+nc -zv SEU_HOST_POSTGRES SEU_PORTA
 
 # Ver logs do backend
 sudo journalctl -u banco-ai -n 50
@@ -122,4 +126,3 @@ sudo journalctl -u banco-ai -n 50
 sudo systemctl status banco-ai
 sudo netstat -tlnp | grep 8080
 ```
-

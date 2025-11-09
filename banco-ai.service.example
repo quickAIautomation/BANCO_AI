@@ -11,12 +11,13 @@ Restart=always
 RestartSec=10
 
 # Database Configuration
-Environment="DATABASE_URL=jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/banco_ai"
-Environment="DATABASE_USER=${DATABASE_USER}"
-Environment="DATABASE_PASSWORD=${DATABASE_PASSWORD}"
+# IMPORTANTE: Configure as variáveis de ambiente com suas credenciais reais
+Environment="DATABASE_URL=jdbc:postgresql://SEU_HOST_POSTGRES:SEU_PORTA/banco_ai"
+Environment="DATABASE_USER=seu_usuario"
+Environment="DATABASE_PASSWORD=sua_senha"
 
 # JWT Secret (IMPORTANTE: Altere para uma chave forte em produção!)
-Environment="JWT_SECRET=bancoAiSecretKey2024SuperSecureKeyForJWTTokenGenerationChangeThisInProduction"
+Environment="JWT_SECRET=sua_chave_secreta_super_forte_aqui"
 
 # Frontend URL (Ajuste conforme seu domínio)
 Environment="FRONTEND_URL=https://seu-dominio.com"
@@ -24,8 +25,8 @@ Environment="FRONTEND_URL=https://seu-dominio.com"
 # Email Configuration (Opcional - ajuste conforme necessário)
 Environment="MAIL_HOST=smtp.gmail.com"
 Environment="MAIL_PORT=587"
-Environment="MAIL_USERNAME="
-Environment="MAIL_PASSWORD="
+Environment="MAIL_USERNAME=seu_email@gmail.com"
+Environment="MAIL_PASSWORD=sua_senha_app"
 
 # Upload Directory
 Environment="UPLOAD_DIR=/var/www/banco-ai/backend/uploads/carros"
