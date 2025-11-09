@@ -1,0 +1,35 @@
+[Unit]
+Description=BANCO AI Backend
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/banco-ai/backend
+ExecStart=/usr/bin/java -jar -Dspring.profiles.active=prod /var/www/banco-ai/backend/target/banco-ai-1.0.0.jar
+Restart=always
+RestartSec=10
+
+# Database Configuration
+Environment="DATABASE_URL=jdbc:postgresql://5.161.206.196:5434/banco_ai"
+Environment="DATABASE_USER=postgres"
+Environment="DATABASE_PASSWORD=#QuickAI12345"
+
+# JWT Secret (IMPORTANTE: Altere para uma chave forte em produção!)
+Environment="JWT_SECRET=bancoAiSecretKey2024SuperSecureKeyForJWTTokenGenerationChangeThisInProduction"
+
+# Frontend URL (Ajuste conforme seu domínio)
+Environment="FRONTEND_URL=https://seu-dominio.com"
+
+# Email Configuration (Opcional - ajuste conforme necessário)
+Environment="MAIL_HOST=smtp.gmail.com"
+Environment="MAIL_PORT=587"
+Environment="MAIL_USERNAME="
+Environment="MAIL_PASSWORD="
+
+# Upload Directory
+Environment="UPLOAD_DIR=/var/www/banco-ai/backend/uploads/carros"
+
+[Install]
+WantedBy=multi-user.target
+
