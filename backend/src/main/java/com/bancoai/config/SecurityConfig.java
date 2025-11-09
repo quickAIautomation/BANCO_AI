@@ -63,7 +63,9 @@ public class SecurityConfig {
             frontendUrl,
             "http://localhost:3000",
             "https://bancoai.com.br",
-            "http://bancoai.com.br"
+            "https://www.bancoai.com.br",
+            "http://bancoai.com.br",
+            "http://www.bancoai.com.br"
         );
         configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
