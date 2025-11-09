@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
   FaCar, 
@@ -16,6 +17,33 @@ import {
 
 function Recursos() {
   const navigate = useNavigate()
+  const [isScrolled, setIsScrolled] = useState(false)
+  const [lastScrollY, setLastScrollY] = useState(0)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY
+      
+      // Se rolar para baixo mais de 100px, esconde o header
+      if (currentScrollY > 100) {
+        // Se está rolando para baixo, esconde
+        if (currentScrollY > lastScrollY) {
+          setIsScrolled(true)
+        } else {
+          // Se está rolando para cima, mostra
+          setIsScrolled(false)
+        }
+      } else {
+        // No topo, sempre mostra
+        setIsScrolled(false)
+      }
+      
+      setLastScrollY(currentScrollY)
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [lastScrollY])
 
   const recursos = [
     {
@@ -119,7 +147,9 @@ function Recursos() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black">
       {/* Header */}
-      <header className="bg-black/50 backdrop-blur-sm border-b border-red-600/30 sticky top-0 z-50">
+      <header className={`bg-black/95 backdrop-blur-md border-b border-red-600/30 fixed top-0 left-0 right-0 z-50 transition-transform duration-300 ${
+        isScrolled ? '-translate-y-full' : 'translate-y-0'
+      }`}>
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -145,7 +175,7 @@ function Recursos() {
       </header>
 
       {/* Hero Section */}
-      <section className="container mx-auto px-4 py-16 md:py-24 text-center">
+      <section className="container mx-auto px-4 py-16 md:py-24 pt-32 md:pt-40 text-center">
         <div className="flex items-center justify-center mb-6">
           <FaCar className="text-red-600 text-6xl md:text-8xl animate-pulse" />
         </div>
