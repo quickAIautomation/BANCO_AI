@@ -87,6 +87,9 @@ public class AuthService {
         usuario.setEmpresa(empresa);
         usuario.setAtivo(true);
         
+        // Adicionar empresa ao Set de empresas (Many-to-Many)
+        usuario.getEmpresas().add(empresa);
+        
         usuario = usuarioRepository.save(usuario);
         
         // Fazer login automático

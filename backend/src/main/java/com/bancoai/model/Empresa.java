@@ -51,5 +51,9 @@ public class Empresa {
     protected void onUpdate() {
         dataAtualizacao = LocalDateTime.now();
     }
+    
+    // Relacionamento Many-to-Many bidirecional com Usuario
+    @ManyToMany(mappedBy = "empresas", fetch = FetchType.LAZY)
+    private java.util.Set<com.bancoai.model.Usuario> usuarios = new java.util.HashSet<>();
 }
 

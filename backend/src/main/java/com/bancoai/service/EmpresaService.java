@@ -4,6 +4,7 @@ import com.bancoai.dto.BuscaEmpresaDTO;
 import com.bancoai.dto.EmpresaDTO;
 import com.bancoai.model.Empresa;
 import com.bancoai.repository.EmpresaRepository;
+import com.bancoai.repository.UsuarioRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,14 +20,16 @@ import java.util.stream.Collectors;
 public class EmpresaService {
     
     private final EmpresaRepository empresaRepository;
+    private final UsuarioRepository usuarioRepository;
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     
-    public EmpresaService(EmpresaRepository empresaRepository) {
+    public EmpresaService(EmpresaRepository empresaRepository, UsuarioRepository usuarioRepository) {
         this.empresaRepository = empresaRepository;
+        this.usuarioRepository = usuarioRepository;
     }
     
     @Transactional
-    public EmpresaDTO criarEmpresa(EmpresaDTO empresaDTO) {
+    public EmpresaDTO criarEmpresa(EmpresaDTO empresaDTO, Long usuarioId) {
         if (empresaRepository.existsByNome(empresaDTO.getNome())) {
             throw new RuntimeException("Já existe uma empresa com este nome");
         }
@@ -40,6 +43,13 @@ public class EmpresaService {
         empresa.setAtiva(empresaDTO.getAtiva() != null ? empresaDTO.getAtiva() : true);
         
         Empresa empresaSalva = empresaRepository.save(empresa);
+        
+        // Associar empresa ao usuário que a criou (Many-to-Many)
+        com.bancoai.model.Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        usuario.getEmpresas().add(empresaSalva);
+        usuarioRepository.save(usuario);
+        
         return converterParaDTO(empresaSalva);
     }
     
@@ -74,6 +84,13 @@ public class EmpresaService {
     }
     
     @Transactional(readOnly = true)
+    public List<EmpresaDTO> listarEmpresasDoUsuario(Long usuarioId) {
+        return empresaRepository.findByUsuarioId(usuarioId).stream()
+                .map(this::converterParaDTO)
+                .collect(Collectors.toList());
+    }
+    
+    @Transactional(readOnly = true)
     public Page<EmpresaDTO> buscarComFiltros(BuscaEmpresaDTO buscaDTO) {
         // Configurar ordenação
         Sort sort = criarSort(buscaDTO.getOrdenarPor(), buscaDTO.getDirecao());
@@ -84,6 +101,30 @@ public class EmpresaService {
         java.time.LocalDateTime dataFim = buscaDTO.getDataFim();
         
         Page<Empresa> empresas = empresaRepository.buscarComFiltros(
+            buscaDTO.getNome(),
+            buscaDTO.getCnpj(),
+            buscaDTO.getEmail(),
+            buscaDTO.getAtiva(),
+            dataInicio,
+            dataFim,
+            pageable
+        );
+        
+        return empresas.map(this::converterParaDTO);
+    }
+    
+    @Transactional(readOnly = true)
+    public Page<EmpresaDTO> buscarComFiltrosPorUsuario(Long usuarioId, BuscaEmpresaDTO buscaDTO) {
+        // Configurar ordenação
+        Sort sort = criarSort(buscaDTO.getOrdenarPor(), buscaDTO.getDirecao());
+        Pageable pageable = PageRequest.of(buscaDTO.getPagina(), buscaDTO.getTamanho(), sort);
+        
+        // Converter datas se necessário
+        java.time.LocalDateTime dataInicio = buscaDTO.getDataInicio();
+        java.time.LocalDateTime dataFim = buscaDTO.getDataFim();
+        
+        Page<Empresa> empresas = empresaRepository.buscarComFiltrosPorUsuario(
+            usuarioId,
             buscaDTO.getNome(),
             buscaDTO.getCnpj(),
             buscaDTO.getEmail(),

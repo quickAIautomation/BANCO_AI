@@ -29,13 +29,17 @@ public class EmpresaController {
     @GetMapping
     public ResponseEntity<List<EmpresaDTO>> listarTodas(Authentication authentication) {
         try {
-            // Apenas admins podem listar todas as empresas
+            // Apenas admins podem listar empresas
             String email = authentication.getName();
             if (!usuarioService.isAdmin(email)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
             
-            List<EmpresaDTO> empresas = empresaService.listarTodas();
+            // Buscar usuário para obter ID
+            com.bancoai.model.Usuario usuario = usuarioService.obterUsuarioCompleto(email);
+            
+            // Listar apenas empresas do usuário (não pode ver empresas de outros usuários)
+            List<EmpresaDTO> empresas = empresaService.listarEmpresasDoUsuario(usuario.getId());
             return ResponseEntity.ok(empresas);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
@@ -52,7 +56,11 @@ public class EmpresaController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
             
-            Page<EmpresaDTO> empresas = empresaService.buscarComFiltros(buscaDTO);
+            // Buscar usuário para obter ID
+            com.bancoai.model.Usuario usuario = usuarioService.obterUsuarioCompleto(email);
+            
+            // Buscar apenas empresas do usuário (não pode ver empresas de outros usuários)
+            Page<EmpresaDTO> empresas = empresaService.buscarComFiltrosPorUsuario(usuario.getId(), buscaDTO);
             return ResponseEntity.ok(empresas);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
@@ -62,6 +70,18 @@ public class EmpresaController {
     @GetMapping("/{id}")
     public ResponseEntity<EmpresaDTO> buscarPorId(@PathVariable Long id, Authentication authentication) {
         try {
+            String email = authentication.getName();
+            com.bancoai.model.Usuario usuario = usuarioService.obterUsuarioCompleto(email);
+            
+            // Verificar se o usuário tem acesso a esta empresa
+            List<EmpresaDTO> empresasDoUsuario = empresaService.listarEmpresasDoUsuario(usuario.getId());
+            boolean temAcesso = empresasDoUsuario.stream()
+                    .anyMatch(e -> e.getId().equals(id));
+            
+            if (!temAcesso) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            
             EmpresaDTO empresa = empresaService.buscarPorId(id);
             return ResponseEntity.ok(empresa);
         } catch (RuntimeException e) {
@@ -79,7 +99,10 @@ public class EmpresaController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
             
-            EmpresaDTO empresaCriada = empresaService.criarEmpresa(empresaDTO);
+            // Buscar usuário para obter ID e associar a empresa
+            com.bancoai.model.Usuario usuario = usuarioService.obterUsuarioCompleto(email);
+            
+            EmpresaDTO empresaCriada = empresaService.criarEmpresa(empresaDTO, usuario.getId());
             return ResponseEntity.status(201).body(empresaCriada);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(null);
@@ -97,6 +120,17 @@ public class EmpresaController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
             
+            com.bancoai.model.Usuario usuario = usuarioService.obterUsuarioCompleto(email);
+            
+            // Verificar se o usuário tem acesso a esta empresa
+            List<EmpresaDTO> empresasDoUsuario = empresaService.listarEmpresasDoUsuario(usuario.getId());
+            boolean temAcesso = empresasDoUsuario.stream()
+                    .anyMatch(e -> e.getId().equals(id));
+            
+            if (!temAcesso) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            
             EmpresaDTO empresaAtualizada = empresaService.atualizarEmpresa(id, empresaDTO);
             return ResponseEntity.ok(empresaAtualizada);
         } catch (RuntimeException e) {
@@ -110,6 +144,17 @@ public class EmpresaController {
             // Apenas admins podem deletar empresas
             String email = authentication.getName();
             if (!usuarioService.isAdmin(email)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            
+            com.bancoai.model.Usuario usuario = usuarioService.obterUsuarioCompleto(email);
+            
+            // Verificar se o usuário tem acesso a esta empresa
+            List<EmpresaDTO> empresasDoUsuario = empresaService.listarEmpresasDoUsuario(usuario.getId());
+            boolean temAcesso = empresasDoUsuario.stream()
+                    .anyMatch(e -> e.getId().equals(id));
+            
+            if (!temAcesso) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
             

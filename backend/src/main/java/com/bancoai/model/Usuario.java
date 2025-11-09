@@ -33,6 +33,15 @@ public class Usuario {
     @JoinColumn(name = "empresa_id", nullable = false)
     private Empresa empresa;
     
+    // Relacionamento Many-to-Many para permitir múltiplas empresas por ADMIN
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "usuario_empresas",
+        joinColumns = @JoinColumn(name = "usuario_id"),
+        inverseJoinColumns = @JoinColumn(name = "empresa_id")
+    )
+    private java.util.Set<Empresa> empresas = new java.util.HashSet<>();
+    
     @Column(nullable = false)
     private Boolean ativo = true;
     
