@@ -113,14 +113,24 @@ function Login({ setIsAuthenticated }) {
             </button>
           </form>
 
-          <div className="mt-4 text-center">
+          <div className="mt-4 text-center space-y-2">
             <button
               type="button"
               onClick={() => navigate('/esqueceu-senha')}
-              className="text-sm text-red-600 hover:text-red-700 hover:underline"
+              className="text-sm text-red-600 hover:text-red-700 hover:underline block"
             >
               Esqueceu a senha?
             </button>
+            <p className="text-sm text-gray-600">
+              Não tem uma conta?{' '}
+              <button
+                type="button"
+                onClick={() => navigate('/register')}
+                className="text-red-600 hover:text-red-700 hover:underline font-medium"
+              >
+                Criar Conta
+              </button>
+            </p>
           </div>
 
           <div className="mt-6 text-center text-xs md:text-sm text-gray-600">
