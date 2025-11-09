@@ -131,6 +131,15 @@ function Login({ setIsAuthenticated }) {
                 Criar Conta
               </button>
             </p>
+            <p className="text-sm text-gray-600 mt-2">
+              <button
+                type="button"
+                onClick={() => navigate('/recursos')}
+                className="text-red-600 hover:text-red-700 hover:underline"
+              >
+                Ver Recursos da Plataforma
+              </button>
+            </p>
           </div>
 
           <div className="mt-6 text-center text-xs md:text-sm text-gray-600">

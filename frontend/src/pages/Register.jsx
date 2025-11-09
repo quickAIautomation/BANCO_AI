@@ -175,7 +175,7 @@ function Register({ setIsAuthenticated }) {
             </button>
           </form>
 
-          <div className="mt-4 text-center">
+          <div className="mt-4 text-center space-y-2">
             <p className="text-sm text-gray-600">
               Já tem uma conta?{' '}
               <button
@@ -184,6 +184,15 @@ function Register({ setIsAuthenticated }) {
                 className="text-red-600 hover:text-red-700 hover:underline font-medium"
               >
                 Fazer Login
+              </button>
+            </p>
+            <p className="text-sm text-gray-600">
+              <button
+                type="button"
+                onClick={() => navigate('/recursos')}
+                className="text-red-600 hover:text-red-700 hover:underline"
+              >
+                Ver Recursos da Plataforma
               </button>
             </p>
           </div>

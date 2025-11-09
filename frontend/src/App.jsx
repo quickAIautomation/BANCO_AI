@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import Recursos from './pages/Recursos'
 import Dashboard from './pages/Dashboard'
 import Perfil from './pages/Perfil'
 import Empresas from './pages/Empresas'
@@ -45,6 +46,10 @@ function App() {
           } 
         />
         <Route 
+          path="/recursos" 
+          element={<Recursos />} 
+        />
+        <Route 
           path="/esqueceu-senha" 
           element={<EsqueceuSenha />} 
         />
@@ -82,7 +87,12 @@ function App() {
             isAuthenticated ? <Configuracoes setIsAuthenticated={setIsAuthenticated} /> : <Navigate to="/login" />
           } 
         />
-        <Route path="/" element={<Navigate to="/dashboard" />} />
+        <Route 
+          path="/" 
+          element={
+            isAuthenticated ? <Navigate to="/dashboard" /> : <Navigate to="/recursos" />
+          } 
+        />
       </Routes>
     </Router>
   )
