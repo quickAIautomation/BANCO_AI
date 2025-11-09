@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
-import { FaUsers, FaSignOutAlt, FaPlus, FaUser, FaSearch, FaEdit, FaTrash, FaTimes, FaBuilding } from 'react-icons/fa'
+import Header from '../components/Header'
+import { FaUsers, FaPlus, FaUser, FaSearch, FaEdit, FaTrash, FaTimes, FaBuilding, FaCar, FaSignOutAlt } from 'react-icons/fa'
 import { removeToken } from '../utils/auth'
 
 function Usuarios({ setIsAuthenticated }) {
@@ -137,54 +138,54 @@ function Usuarios({ setIsAuthenticated }) {
     }
   }
 
+  const customButtons = (
+    <>
+      <button
+        onClick={() => navigate('/dashboard')}
+        className="text-white hover:text-red-600 transition-colors flex items-center space-x-2 text-sm md:text-base py-2 md:py-0"
+      >
+        <FaCar />
+        <span>Carros</span>
+      </button>
+      <button
+        onClick={() => navigate('/empresas')}
+        className="text-white hover:text-red-600 transition-colors flex items-center space-x-2 text-sm md:text-base py-2 md:py-0"
+      >
+        <FaBuilding />
+        <span>Empresas</span>
+      </button>
+      <button
+        onClick={handleNovoUsuario}
+        className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 flex items-center space-x-2 transition-colors text-sm md:text-base w-full md:w-auto justify-center"
+      >
+        <FaPlus />
+        <span>Novo Usuário</span>
+      </button>
+      <button
+        onClick={() => navigate('/perfil')}
+        className="text-white hover:text-red-600 flex items-center space-x-2 transition-colors text-sm md:text-base py-2 md:py-0"
+      >
+        <FaUser />
+        <span>Perfil</span>
+      </button>
+      <button
+        onClick={handleLogout}
+        className="text-white hover:text-red-600 flex items-center space-x-2 transition-colors text-sm md:text-base py-2 md:py-0"
+      >
+        <FaSignOutAlt />
+        <span>Sair</span>
+      </button>
+    </>
+  )
+
   return (
     <div className="min-h-screen bg-black">
       {/* Header */}
-      <header className="bg-black border-b-2 border-red-600">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <FaUsers className="text-red-600 text-3xl" />
-              <h1 className="text-3xl font-bold text-white">Gerenciar Usuários</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="text-white hover:text-red-600 transition-colors"
-              >
-                Carros
-              </button>
-              <button
-                onClick={() => navigate('/empresas')}
-                className="text-white hover:text-red-600 transition-colors"
-              >
-                Empresas
-              </button>
-              <button
-                onClick={handleNovoUsuario}
-                className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 flex items-center space-x-2 transition-colors"
-              >
-                <FaPlus />
-                <span>Novo Usuário</span>
-              </button>
-              <button
-                onClick={() => navigate('/perfil')}
-                className="text-white hover:text-red-600 flex items-center space-x-2 transition-colors"
-              >
-                <FaUser />
-                <span>Perfil</span>
-              </button>
-              <button
-                onClick={handleLogout}
-                className="text-white hover:text-red-600 flex items-center space-x-2 transition-colors"
-              >
-                <FaSignOutAlt />
-                <span>Sair</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header
+        title="Gerenciar Usuários"
+        icon={FaUsers}
+        customButtons={customButtons}
+      />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">

@@ -4,6 +4,12 @@ import { getAuthHeader, removeToken } from '../utils/auth'
 // Usa variável de ambiente ou fallback para localhost
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
 
+// Exportar URL base para uso em componentes (ex: imagens)
+export const getApiBaseUrl = () => {
+  // Remove /api do final se existir, pois as rotas de imagens não precisam
+  return API_BASE_URL.replace('/api', '')
+}
+
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {

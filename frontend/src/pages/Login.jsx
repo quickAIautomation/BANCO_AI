@@ -54,18 +54,18 @@ function Login({ setIsAuthenticated }) {
   }
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center px-4">
+    <div className="min-h-screen bg-black flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
+        <div className="text-center mb-6 md:mb-8">
           <div className="flex items-center justify-center mb-4">
-            <FaCar className="text-red-600 text-6xl" />
+            <FaCar className="text-red-600 text-4xl md:text-6xl" />
           </div>
-          <h1 className="text-4xl font-bold text-white mb-2">BANCO AI</h1>
-          <p className="text-gray-400">Sistema de Gerenciamento de Carros</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">BANCO AI</h1>
+          <p className="text-gray-400 text-sm md:text-base">Sistema de Gerenciamento de Carros</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <h2 className="text-2xl font-bold text-black mb-6 text-center">Login Administrador</h2>
+        <div className="bg-white rounded-lg shadow-lg p-6 md:p-8">
+          <h2 className="text-xl md:text-2xl font-bold text-black mb-6 text-center">Login Administrador</h2>
           
           {erro && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -123,9 +123,9 @@ function Login({ setIsAuthenticated }) {
             </button>
           </div>
 
-          <div className="mt-6 text-center text-sm text-gray-600">
+          <div className="mt-6 text-center text-xs md:text-sm text-gray-600">
             <p>Credenciais padrão:</p>
-            <p className="font-mono">admin@bancoai.com / admin123</p>
+            <p className="font-mono text-xs md:text-sm break-all">admin@bancoai.com / admin123</p>
           </div>
         </div>
       </div>
