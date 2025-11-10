@@ -95,13 +95,13 @@ BANCO_AI/
 │   ├── src/
 │   │   ├── main/
 │   │   │   ├── java/com/bancoai/
-│   │   │   │   ├── config/          # Configurações (Security, CORS)
-│   │   │   │   ├── controller/       # Controllers REST
-│   │   │   │   ├── dto/              # Data Transfer Objects
-│   │   │   │   ├── model/            # Entidades JPA
-│   │   │   │   ├── repository/       # Repositórios JPA
-│   │   │   │   ├── security/         # JWT e Filtros de segurança
-│   │   │   │   └── service/          # Lógica de negócio
+│   │   │   │   ├── config/          
+│   │   │   │   ├── controller/      
+│   │   │   │   ├── dto/             
+│   │   │   │   ├── model/            
+│   │   │   │   ├── repository/       
+│   │   │   │   ├── security/        
+│   │   │   │   └── service/          
 │   │   │   └── resources/
 │   │   │       └── application.properties
 │   │   └── test/
