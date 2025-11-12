@@ -40,7 +40,7 @@ public class Carro {
     
     @ElementCollection
     @CollectionTable(name = "carro_fotos", joinColumns = @JoinColumn(name = "carro_id"))
-    @Column(name = "foto_base64", columnDefinition = "TEXT")
+    @Column(name = "foto_url")
     private List<String> fotos = new ArrayList<>();
     
     @Column(nullable = false, updatable = false)

@@ -43,6 +43,7 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/carros/fotos/**").permitAll()
                 // API pública agora requer autenticação (JWT ou X-API-Key)
                 .requestMatchers("/api/public/**").authenticated()
                 .anyRequest().authenticated()
