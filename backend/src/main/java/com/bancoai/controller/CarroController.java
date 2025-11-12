@@ -4,20 +4,13 @@ import com.bancoai.dto.BuscaCarroDTO;
 import com.bancoai.dto.CarroDTO;
 import com.bancoai.service.CarroService;
 import com.bancoai.service.UsuarioService;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.data.domain.Page;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 
 @RestController
@@ -27,7 +20,6 @@ public class CarroController {
     
     private final CarroService carroService;
     private final UsuarioService usuarioService;
-    private final String uploadDir = "uploads/carros";
     
     public CarroController(CarroService carroService, UsuarioService usuarioService) {
         this.carroService = carroService;
@@ -146,32 +138,6 @@ public class CarroController {
             carroService.deletarCarro(id, empresaId, usuarioEmail);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-    
-    @GetMapping("/fotos/{nomeArquivo}")
-    public ResponseEntity<Resource> obterFoto(@PathVariable String nomeArquivo) {
-        try {
-            Path caminhoArquivo = Paths.get(uploadDir).resolve(nomeArquivo).normalize();
-            Resource resource = new UrlResource(caminhoArquivo.toUri());
-            
-            if (resource.exists() && resource.isReadable()) {
-                // Detectar o tipo de conteúdo automaticamente
-                String contentType = Files.probeContentType(caminhoArquivo);
-                if (contentType == null || !contentType.startsWith("image/")) {
-                    // Fallback para JPEG se não conseguir detectar
-                    contentType = MediaType.IMAGE_JPEG_VALUE;
-                }
-                
-                return ResponseEntity.ok()
-                        .contentType(MediaType.parseMediaType(contentType))
-                        .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + nomeArquivo + "\"")
-                        .body(resource);
-            } else {
-                return ResponseEntity.notFound().build();
-            }
-        } catch (Exception e) {
             return ResponseEntity.notFound().build();
         }
     }

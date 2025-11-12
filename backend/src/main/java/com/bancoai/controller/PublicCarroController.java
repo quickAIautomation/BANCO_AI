@@ -2,13 +2,10 @@ package com.bancoai.controller;
 
 import com.bancoai.dto.CarroDTO;
 import com.bancoai.service.CarroService;
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/public/carros")
@@ -17,26 +14,8 @@ public class PublicCarroController {
     
     private final CarroService carroService;
     
-    @Value("${server.port:8080}")
-    private int serverPort;
-    
     public PublicCarroController(CarroService carroService) {
         this.carroService = carroService;
-    }
-    
-    /**
-     * Obtém a URL base do servidor dinamicamente
-     */
-    private String getBaseUrl(HttpServletRequest request) {
-        String scheme = request.getScheme(); // http ou https
-        String serverName = request.getServerName(); // localhost ou domínio
-        int port = request.getServerPort(); // porta do servidor
-        
-        if ((scheme.equals("http") && port == 80) || (scheme.equals("https") && port == 443)) {
-            return scheme + "://" + serverName;
-        } else {
-            return scheme + "://" + serverName + ":" + port;
-        }
     }
     
     /**
@@ -47,21 +26,14 @@ public class PublicCarroController {
      * GET http://localhost:8080/api/public/carros
      * Header: X-API-Key: sua_chave_api_aqui
      * 
-     * @param request HttpServletRequest para obter a URL base
-     * @return Lista de todos os carros com informações completas
+     * @return Lista de todos os carros com informações completas (fotos em base64)
      */
     @GetMapping
-    public ResponseEntity<List<CarroDTO>> listarTodosCarros(HttpServletRequest request) {
+    public ResponseEntity<List<CarroDTO>> listarTodosCarros() {
         // API pública retorna todos os carros de todas as empresas
+        // As fotos já vêm como base64 do banco de dados
         List<CarroDTO> carros = carroService.listarTodosPublico();
-        String baseUrl = getBaseUrl(request);
-        
-        // Converter URLs relativas das fotos para URLs absolutas
-        List<CarroDTO> carrosComUrlsCompletas = carros.stream()
-                .map(carro -> adicionarUrlsCompletas(carro, baseUrl))
-                .collect(Collectors.toList());
-        
-        return ResponseEntity.ok(carrosComUrlsCompletas);
+        return ResponseEntity.ok(carros);
     }
     
     /**
@@ -73,16 +45,14 @@ public class PublicCarroController {
      * Header: X-API-Key: sua_chave_api_aqui
      * 
      * @param id ID do carro
-     * @param request HttpServletRequest para obter a URL base
-     * @return Dados completos do carro
+     * @return Dados completos do carro (fotos em base64)
      */
     @GetMapping("/{id}")
-    public ResponseEntity<CarroDTO> buscarCarroPorId(@PathVariable Long id, HttpServletRequest request) {
+    public ResponseEntity<CarroDTO> buscarCarroPorId(@PathVariable Long id) {
         try {
             CarroDTO carro = carroService.buscarPorIdPublico(id);
-            String baseUrl = getBaseUrl(request);
-            CarroDTO carroComUrlsCompletas = adicionarUrlsCompletas(carro, baseUrl);
-            return ResponseEntity.ok(carroComUrlsCompletas);
+            // As fotos já vêm como base64 do banco de dados
+            return ResponseEntity.ok(carro);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
@@ -97,40 +67,17 @@ public class PublicCarroController {
      * Header: X-API-Key: sua_chave_api_aqui
      * 
      * @param placa Placa do carro
-     * @param request HttpServletRequest para obter a URL base
-     * @return Dados completos do carro
+     * @return Dados completos do carro (fotos em base64)
      */
     @GetMapping("/placa/{placa}")
-    public ResponseEntity<CarroDTO> buscarCarroPorPlaca(@PathVariable String placa, HttpServletRequest request) {
+    public ResponseEntity<CarroDTO> buscarCarroPorPlaca(@PathVariable String placa) {
         try {
             CarroDTO carro = carroService.buscarPorPlacaPublico(placa.toUpperCase());
-            String baseUrl = getBaseUrl(request);
-            CarroDTO carroComUrlsCompletas = adicionarUrlsCompletas(carro, baseUrl);
-            return ResponseEntity.ok(carroComUrlsCompletas);
+            // As fotos já vêm como base64 do banco de dados
+            return ResponseEntity.ok(carro);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
-    }
-    
-    /**
-     * Converte URLs relativas das fotos para URLs absolutas
-     */
-    private CarroDTO adicionarUrlsCompletas(CarroDTO carro, String baseUrl) {
-        if (carro.getFotos() != null && !carro.getFotos().isEmpty()) {
-            List<String> fotosCompletas = carro.getFotos().stream()
-                    .map(foto -> {
-                        if (foto.startsWith("http")) {
-                            return foto; // Já é uma URL completa
-                        } else if (foto.startsWith("/")) {
-                            return baseUrl + foto; // URL relativa
-                        } else {
-                            return baseUrl + "/api/carros/fotos/" + foto; // Apenas nome do arquivo
-                        }
-                    })
-                    .collect(Collectors.toList());
-            carro.setFotos(fotosCompletas);
-        }
-        return carro;
     }
 }
 

@@ -1,9 +1,9 @@
 import { FaEdit, FaTrash, FaCar, FaTachometerAlt, FaCalendarAlt } from 'react-icons/fa'
-import { getApiBaseUrl } from '../services/api'
 
 function CarroCard({ carro, onEdit, onDelete, canEdit = true, canDelete = true }) {
+  // As fotos já vêm como base64 do backend (formato: data:image/...;base64,...)
   const primeiraFoto = carro.fotos && carro.fotos.length > 0 
-    ? `${getApiBaseUrl()}${carro.fotos[0]}` 
+    ? carro.fotos[0] 
     : null
 
   const handleImageError = (e) => {

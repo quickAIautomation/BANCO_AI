@@ -25,6 +25,14 @@ function CarroForm({ carro, onClose, onSuccess }) {
         marca: carro.marca || '',
         observacoes: carro.observacoes || ''
       })
+      // Carregar fotos existentes (já vêm em base64 do backend)
+      if (carro.fotos && carro.fotos.length > 0) {
+        setFotosPreview(carro.fotos)
+      }
+    } else {
+      // Limpar previews ao criar novo carro
+      setFotosPreview([])
+      setFotos([])
     }
   }, [carro])
 

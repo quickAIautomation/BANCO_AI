@@ -225,16 +225,16 @@ function Empresas({ setIsAuthenticated }) {
             {empresas.map((empresa) => (
               <div key={empresa.id} className="bg-gray-900 rounded-lg p-6 border border-gray-800">
                 {/* Cabeçalho da Empresa */}
-                <div className="flex justify-between items-start mb-4">
+                <div className="flex flex-col md:flex-row md:justify-between md:items-start mb-4 gap-4">
                   <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
                       <FaBuilding className="text-red-600 text-2xl" />
                       <h3 className="text-xl font-bold text-white">{empresa.nome}</h3>
                       <span className={`px-2 py-1 rounded text-xs ${empresa.ativa ? 'bg-green-600' : 'bg-red-600'} text-white`}>
                         {empresa.ativa ? 'Ativa' : 'Inativa'}
                       </span>
                     </div>
-                    <div className="space-y-1 text-gray-300 ml-10">
+                    <div className="space-y-1 text-gray-300 ml-0 md:ml-10">
                       {empresa.cnpj && <p><strong>CNPJ:</strong> {empresa.cnpj}</p>}
                       {empresa.email && (
                         <p className="flex items-center space-x-2">
@@ -248,11 +248,11 @@ function Empresas({ setIsAuthenticated }) {
                     </div>
                   </div>
                   {(canEditEmpresa(userRole) || canDeleteEmpresa(userRole)) && (
-                    <div className="flex space-x-2">
+                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                       {canEditEmpresa(userRole) && (
                         <button
                           onClick={() => handleEditarEmpresa(empresa)}
-                          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center space-x-2"
+                          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center justify-center space-x-2 transition-colors"
                         >
                           <FaEdit />
                           <span>Editar</span>
@@ -261,7 +261,7 @@ function Empresas({ setIsAuthenticated }) {
                       {canDeleteEmpresa(userRole) && (
                         <button
                           onClick={() => handleDeletarEmpresa(empresa.id)}
-                          className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 flex items-center space-x-2"
+                          className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 flex items-center justify-center space-x-2 transition-colors"
                         >
                           <FaTrash />
                           <span>Desativar</span>

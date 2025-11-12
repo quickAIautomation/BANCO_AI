@@ -15,13 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.time.format.DateTimeFormatter;
+import java.util.Base64;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,7 +26,6 @@ public class CarroService {
     private final CarroRepository carroRepository;
     private final EmpresaRepository empresaRepository;
     private final AuditoriaService auditoriaService;
-    private final String uploadDir = "uploads/carros";
     
     public CarroService(CarroRepository carroRepository, 
                        EmpresaRepository empresaRepository,
@@ -38,18 +33,6 @@ public class CarroService {
         this.carroRepository = carroRepository;
         this.empresaRepository = empresaRepository;
         this.auditoriaService = auditoriaService;
-        createUploadDirectory();
-    }
-    
-    private void createUploadDirectory() {
-        try {
-            Path path = Paths.get(uploadDir);
-            if (!Files.exists(path)) {
-                Files.createDirectories(path);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Erro ao criar diretório de uploads", e);
-        }
     }
     
     @Transactional
@@ -70,8 +53,8 @@ public class CarroService {
         carro.setObservacoes(carroDTO.getObservacoes());
         
         if (fotos != null && !fotos.isEmpty()) {
-            List<String> fotoUrls = salvarFotos(fotos, carro.getPlaca());
-            carro.setFotos(fotoUrls);
+            List<String> fotosBase64 = converterFotosParaBase64(fotos);
+            carro.setFotos(fotosBase64);
         }
         
         Carro carroSalvo = carroRepository.save(carro);
@@ -109,8 +92,8 @@ public class CarroService {
         carro.setObservacoes(carroDTO.getObservacoes());
         
         if (novasFotos != null && !novasFotos.isEmpty()) {
-            List<String> fotoUrls = salvarFotos(novasFotos, carro.getPlaca());
-            carro.getFotos().addAll(fotoUrls);
+            List<String> fotosBase64 = converterFotosParaBase64(novasFotos);
+            carro.getFotos().addAll(fotosBase64);
         }
         
         Carro carroAtualizado = carroRepository.save(carro);
@@ -187,9 +170,6 @@ public class CarroService {
         // Salvar dados para auditoria
         CarroDTO dadosAnteriores = converterParaDTO(carro);
         
-        // Deletar fotos do sistema de arquivos
-        deletarFotos(carro.getFotos());
-        
         carroRepository.delete(carro);
         
         // Registrar auditoria
@@ -215,39 +195,29 @@ public class CarroService {
         }
     }
     
-    private List<String> salvarFotos(List<MultipartFile> fotos, String placa) {
+    private List<String> converterFotosParaBase64(List<MultipartFile> fotos) {
         return fotos.stream()
                 .filter(foto -> !foto.isEmpty())
-                .map(foto -> salvarFoto(foto, placa))
+                .map(this::converterFotoParaBase64)
                 .collect(Collectors.toList());
     }
     
-    private String salvarFoto(MultipartFile foto, String placa) {
+    private String converterFotoParaBase64(MultipartFile foto) {
         try {
-            String extensao = foto.getOriginalFilename() != null 
-                    ? foto.getOriginalFilename().substring(foto.getOriginalFilename().lastIndexOf("."))
-                    : ".jpg";
-            String nomeArquivo = placa + "_" + UUID.randomUUID().toString() + extensao;
-            Path caminhoArquivo = Paths.get(uploadDir, nomeArquivo);
+            byte[] bytes = foto.getBytes();
+            String base64 = Base64.getEncoder().encodeToString(bytes);
             
-            Files.copy(foto.getInputStream(), caminhoArquivo, StandardCopyOption.REPLACE_EXISTING);
-            
-            return "/api/carros/fotos/" + nomeArquivo;
-        } catch (IOException e) {
-            throw new RuntimeException("Erro ao salvar foto", e);
-        }
-    }
-    
-    private void deletarFotos(List<String> fotoUrls) {
-        fotoUrls.forEach(url -> {
-            try {
-                String nomeArquivo = url.substring(url.lastIndexOf("/") + 1);
-                Path caminhoArquivo = Paths.get(uploadDir, nomeArquivo);
-                Files.deleteIfExists(caminhoArquivo);
-            } catch (IOException e) {
-                System.err.println("Erro ao deletar foto: " + url);
+            // Detectar o tipo MIME da imagem
+            String contentType = foto.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                contentType = "image/jpeg"; // Fallback para JPEG
             }
-        });
+            
+            // Retornar base64 com prefixo data URI
+            return "data:" + contentType + ";base64," + base64;
+        } catch (IOException e) {
+            throw new RuntimeException("Erro ao converter foto para base64", e);
+        }
     }
     
     private CarroDTO converterParaDTO(Carro carro) {
