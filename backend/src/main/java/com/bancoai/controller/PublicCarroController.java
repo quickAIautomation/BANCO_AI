@@ -20,22 +20,54 @@ public class PublicCarroController {
     @Value("${server.port:8080}")
     private int serverPort;
     
+    @Value("${app.force-https:false}")
+    private boolean forceHttps;
+    
+    @Value("${app.base-url:}")
+    private String baseUrlOverride;
+    
     public PublicCarroController(CarroService carroService) {
         this.carroService = carroService;
     }
     
     /**
      * Obtém a URL base do servidor dinamicamente
+     * Força HTTPS se configurado ou se detectar proxy reverso
      */
     private String getBaseUrl(HttpServletRequest request) {
-        String scheme = request.getScheme(); // http ou https
-        String serverName = request.getServerName(); // localhost ou domínio
-        int port = request.getServerPort(); // porta do servidor
+        // Se houver URL base configurada, usar ela
+        if (baseUrlOverride != null && !baseUrlOverride.isEmpty()) {
+            return baseUrlOverride;
+        }
         
-        if ((scheme.equals("http") && port == 80) || (scheme.equals("https") && port == 443)) {
-            return scheme + "://" + serverName;
+        // Verificar header X-Forwarded-Proto (comum em proxies reversos como Nginx)
+        String forwardedProto = request.getHeader("X-Forwarded-Proto");
+        String scheme = (forwardedProto != null && !forwardedProto.isEmpty()) 
+            ? forwardedProto 
+            : request.getScheme();
+        
+        // Forçar HTTPS se configurado ou se não for localhost
+        if (forceHttps || (!request.getServerName().equals("localhost") && !request.getServerName().equals("127.0.0.1"))) {
+            scheme = "https";
+        }
+        
+        String serverName = request.getServerName();
+        int port = request.getServerPort();
+        
+        // Se for HTTPS, não incluir porta padrão (443)
+        if (scheme.equals("https")) {
+            if (port == 443 || port == 8080) {
+                return scheme + "://" + serverName;
+            } else {
+                return scheme + "://" + serverName + ":" + port;
+            }
         } else {
-            return scheme + "://" + serverName + ":" + port;
+            // HTTP apenas para localhost/desenvolvimento
+            if (port == 80) {
+                return scheme + "://" + serverName;
+            } else {
+                return scheme + "://" + serverName + ":" + port;
+            }
         }
     }
     
