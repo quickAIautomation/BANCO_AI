@@ -4,6 +4,8 @@ import com.bancoai.dto.AuditoriaDTO;
 import com.bancoai.model.Auditoria;
 import com.bancoai.repository.AuditoriaRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +22,10 @@ public class AuditoriaService {
     
     public AuditoriaService(AuditoriaRepository auditoriaRepository) {
         this.auditoriaRepository = auditoriaRepository;
+        // Configurar ObjectMapper com suporte a LocalDateTime
         this.objectMapper = new ObjectMapper();
+        this.objectMapper.registerModule(new JavaTimeModule());
+        this.objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     }
     
     @Transactional
