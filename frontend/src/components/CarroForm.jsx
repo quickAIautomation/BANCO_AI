@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import api from '../services/api'
 import { getUserRole, getSelectedEmpresaId } from '../utils/auth'
+import { getApiBaseUrl } from '../services/api'
 import { FaTimes, FaUpload } from 'react-icons/fa'
 
 function CarroForm({ carro, onClose, onSuccess }) {
@@ -25,6 +26,17 @@ function CarroForm({ carro, onClose, onSuccess }) {
         marca: carro.marca || '',
         observacoes: carro.observacoes || ''
       })
+      // Carregar fotos existentes (vêm como URLs do backend)
+      if (carro.fotos && carro.fotos.length > 0) {
+        const fotosComUrlsCompletas = carro.fotos.map(foto => 
+          foto.startsWith('http') ? foto : `${getApiBaseUrl()}${foto}`
+        )
+        setFotosPreview(fotosComUrlsCompletas)
+      }
+    } else {
+      // Limpar previews ao criar novo carro
+      setFotosPreview([])
+      setFotos([])
     }
   }, [carro])
 
