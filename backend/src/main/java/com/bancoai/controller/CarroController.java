@@ -88,21 +88,30 @@ public class CarroController {
     
     @PostMapping("/buscar")
     public ResponseEntity<?> buscarComFiltros(
-            @RequestBody BuscaCarroDTO buscaDTO,
+            @RequestBody(required = false) BuscaCarroDTO buscaDTO,
             @RequestParam(value = "empresaId", required = false) Long empresaIdSelecionada,
             Authentication authentication) {
         try {
+            // Validar se buscaDTO foi recebido
+            if (buscaDTO == null) {
+                return ResponseEntity.badRequest().body("Dados de busca não fornecidos");
+            }
+            
             Long empresaId = obterEmpresaIdParaFiltro(authentication, empresaIdSelecionada);
             Page<CarroDTO> carros = carroService.buscarComFiltros(buscaDTO, empresaId);
             return ResponseEntity.ok(carros);
+        } catch (IllegalArgumentException e) {
+            System.err.println("Erro de validação ao buscar carros: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("Erro de validação: " + e.getMessage());
         } catch (RuntimeException e) {
             System.err.println("Erro ao buscar carros: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.badRequest().body("Erro ao buscar carros: " + e.getMessage());
         } catch (Exception e) {
-            System.err.println("Erro inesperado ao buscar carros: " + e.getMessage());
+            System.err.println("Erro inesperado ao buscar carros: " + e.getClass().getName() + " - " + e.getMessage());
             e.printStackTrace();
-            return ResponseEntity.badRequest().body("Erro inesperado ao buscar carros: " + e.getMessage());
+            return ResponseEntity.badRequest().body("Erro inesperado: " + e.getClass().getSimpleName() + " - " + e.getMessage());
         }
     }
     
