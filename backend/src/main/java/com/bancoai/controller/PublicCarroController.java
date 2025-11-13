@@ -25,6 +25,12 @@ public class PublicCarroController {
     @Value("${server.port:8080}")
     private int serverPort;
     
+    @Value("${app.force-https:false}")
+    private boolean forceHttps;
+    
+    @Value("${app.base-url:}")
+    private String baseUrlOverride;
+    
     public PublicCarroController(CarroService carroService, UsuarioService usuarioService) {
         this.carroService = carroService;
         this.usuarioService = usuarioService;
