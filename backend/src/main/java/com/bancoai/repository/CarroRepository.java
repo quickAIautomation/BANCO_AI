@@ -21,11 +21,11 @@ public interface CarroRepository extends JpaRepository<Carro, Long> {
     List<Carro> findByEmpresaId(Long empresaId);
     Page<Carro> findByEmpresaId(Long empresaId, Pageable pageable);
     
-    // Busca avançada - usando COALESCE para garantir que strings vazias sejam tratadas como null
+    // Busca avançada - strings vazias são passadas em vez de null para evitar problemas de tipo
     @Query("SELECT c FROM Carro c WHERE c.empresa.id = :empresaId " +
-           "AND (COALESCE(:placa, '') = '' OR UPPER(c.placa) LIKE UPPER(CONCAT('%', :placa, '%'))) " +
-           "AND (COALESCE(:modelo, '') = '' OR UPPER(c.modelo) LIKE UPPER(CONCAT('%', :modelo, '%'))) " +
-           "AND (COALESCE(:marca, '') = '' OR UPPER(c.marca) LIKE UPPER(CONCAT('%', :marca, '%'))) " +
+           "AND (:placa = '' OR UPPER(c.placa) LIKE UPPER(CONCAT('%', :placa, '%'))) " +
+           "AND (:modelo = '' OR UPPER(c.modelo) LIKE UPPER(CONCAT('%', :modelo, '%'))) " +
+           "AND (:marca = '' OR UPPER(c.marca) LIKE UPPER(CONCAT('%', :marca, '%'))) " +
            "AND (:quilometragemMin IS NULL OR c.quilometragem >= :quilometragemMin) " +
            "AND (:quilometragemMax IS NULL OR c.quilometragem <= :quilometragemMax) " +
            "AND (:dataInicio IS NULL OR c.dataCadastro >= :dataInicio) " +

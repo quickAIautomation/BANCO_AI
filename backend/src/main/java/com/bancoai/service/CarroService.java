@@ -141,13 +141,13 @@ public class CarroService {
         Integer tamanho = buscaDTO.getTamanho() != null && buscaDTO.getTamanho() > 0 ? buscaDTO.getTamanho() : 20;
         Pageable pageable = PageRequest.of(pagina, tamanho, sort);
         
-        // Normalizar strings de busca (trim e null se vazio)
-        String placa = buscaDTO.getPlaca() != null && !buscaDTO.getPlaca().trim().isEmpty() 
-                ? buscaDTO.getPlaca().trim() : null;
-        String modelo = buscaDTO.getModelo() != null && !buscaDTO.getModelo().trim().isEmpty() 
-                ? buscaDTO.getModelo().trim() : null;
-        String marca = buscaDTO.getMarca() != null && !buscaDTO.getMarca().trim().isEmpty() 
-                ? buscaDTO.getMarca().trim() : null;
+        // Normalizar strings de busca (trim e string vazia se null/vazio para evitar problemas de tipo no PostgreSQL)
+        String placa = (buscaDTO.getPlaca() != null && !buscaDTO.getPlaca().trim().isEmpty()) 
+                ? buscaDTO.getPlaca().trim() : "";
+        String modelo = (buscaDTO.getModelo() != null && !buscaDTO.getModelo().trim().isEmpty()) 
+                ? buscaDTO.getModelo().trim() : "";
+        String marca = (buscaDTO.getMarca() != null && !buscaDTO.getMarca().trim().isEmpty()) 
+                ? buscaDTO.getMarca().trim() : "";
         
         // Converter datas se necessário
         java.time.LocalDateTime dataInicio = buscaDTO.getDataInicio();
