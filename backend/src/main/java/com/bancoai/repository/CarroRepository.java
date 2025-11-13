@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,24 +20,8 @@ public interface CarroRepository extends JpaRepository<Carro, Long> {
     List<Carro> findByEmpresaId(Long empresaId);
     Page<Carro> findByEmpresaId(Long empresaId, Pageable pageable);
     
-    // Busca avançada - usando LENGTH para verificar strings vazias (mais seguro que comparar com '')
-    @Query("SELECT c FROM Carro c WHERE c.empresa.id = :empresaId " +
-           "AND (LENGTH(:placa) = 0 OR UPPER(c.placa) LIKE UPPER(CONCAT('%', :placa, '%'))) " +
-           "AND (LENGTH(:modelo) = 0 OR UPPER(c.modelo) LIKE UPPER(CONCAT('%', :modelo, '%'))) " +
-           "AND (LENGTH(:marca) = 0 OR UPPER(c.marca) LIKE UPPER(CONCAT('%', :marca, '%'))) " +
-           "AND (:quilometragemMin IS NULL OR c.quilometragem >= :quilometragemMin) " +
-           "AND (:quilometragemMax IS NULL OR c.quilometragem <= :quilometragemMax) " +
-           "AND (:dataInicio IS NULL OR c.dataCadastro >= :dataInicio) " +
-           "AND (:dataFim IS NULL OR c.dataCadastro <= :dataFim)")
-    Page<Carro> buscarComFiltros(@Param("empresaId") Long empresaId,
-                                  @Param("placa") String placa,
-                                  @Param("modelo") String modelo,
-                                  @Param("marca") String marca,
-                                  @Param("quilometragemMin") Integer quilometragemMin,
-                                  @Param("quilometragemMax") Integer quilometragemMax,
-                                  @Param("dataInicio") LocalDateTime dataInicio,
-                                  @Param("dataFim") LocalDateTime dataFim,
-                                  Pageable pageable);
+    // Método base para buscar por empresa - será usado pelo service para construir query dinâmica
+    List<Carro> findByEmpresaIdOrderByDataCadastroDesc(Long empresaId);
     
     // Estatísticas
     @Query("SELECT COUNT(c) FROM Carro c WHERE c.empresa.id = :empresaId")

@@ -7,9 +7,8 @@ import com.bancoai.model.Empresa;
 import com.bancoai.repository.CarroRepository;
 import com.bancoai.repository.EmpresaRepository;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -131,41 +130,112 @@ public class CarroService {
             throw new RuntimeException("Empresa não encontrada");
         }
         
-        // Configurar ordenação com valores padrão
+        // Buscar todos os carros da empresa primeiro (evita problemas com null)
+        List<Carro> todosCarros = carroRepository.findByEmpresaId(empresaId);
+        
+        // Aplicar filtros em memória (mais simples e evita problemas de tipo SQL)
+        List<Carro> carrosFiltrados = todosCarros.stream()
+            .filter(carro -> {
+                // Filtro por placa
+                if (buscaDTO.getPlaca() != null && !buscaDTO.getPlaca().trim().isEmpty()) {
+                    String placaBusca = buscaDTO.getPlaca().trim().toUpperCase();
+                    if (!carro.getPlaca().toUpperCase().contains(placaBusca)) {
+                        return false;
+                    }
+                }
+                
+                // Filtro por modelo
+                if (buscaDTO.getModelo() != null && !buscaDTO.getModelo().trim().isEmpty()) {
+                    String modeloBusca = buscaDTO.getModelo().trim().toUpperCase();
+                    if (!carro.getModelo().toUpperCase().contains(modeloBusca)) {
+                        return false;
+                    }
+                }
+                
+                // Filtro por marca
+                if (buscaDTO.getMarca() != null && !buscaDTO.getMarca().trim().isEmpty()) {
+                    String marcaBusca = buscaDTO.getMarca().trim().toUpperCase();
+                    if (!carro.getMarca().toUpperCase().contains(marcaBusca)) {
+                        return false;
+                    }
+                }
+                
+                // Filtro por quilometragem mínima
+                if (buscaDTO.getQuilometragemMin() != null) {
+                    if (carro.getQuilometragem() < buscaDTO.getQuilometragemMin()) {
+                        return false;
+                    }
+                }
+                
+                // Filtro por quilometragem máxima
+                if (buscaDTO.getQuilometragemMax() != null) {
+                    if (carro.getQuilometragem() > buscaDTO.getQuilometragemMax()) {
+                        return false;
+                    }
+                }
+                
+                // Filtro por data início
+                if (buscaDTO.getDataInicio() != null) {
+                    if (carro.getDataCadastro() == null || carro.getDataCadastro().isBefore(buscaDTO.getDataInicio())) {
+                        return false;
+                    }
+                }
+                
+                // Filtro por data fim
+                if (buscaDTO.getDataFim() != null) {
+                    if (carro.getDataCadastro() == null || carro.getDataCadastro().isAfter(buscaDTO.getDataFim())) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            })
+            .collect(Collectors.toList());
+        
+        // Aplicar ordenação
         String ordenarPor = buscaDTO.getOrdenarPor() != null ? buscaDTO.getOrdenarPor() : "dataCadastro";
         String direcao = buscaDTO.getDirecao() != null ? buscaDTO.getDirecao() : "DESC";
-        Sort sort = criarSort(ordenarPor, direcao);
         
-        // Validar e configurar paginação
+        carrosFiltrados.sort((c1, c2) -> {
+            int resultado = 0;
+            switch (ordenarPor.toLowerCase()) {
+                case "quilometragem":
+                    resultado = c1.getQuilometragem().compareTo(c2.getQuilometragem());
+                    break;
+                case "modelo":
+                    resultado = c1.getModelo().compareToIgnoreCase(c2.getModelo());
+                    break;
+                case "marca":
+                    resultado = c1.getMarca().compareToIgnoreCase(c2.getMarca());
+                    break;
+                case "placa":
+                    resultado = c1.getPlaca().compareToIgnoreCase(c2.getPlaca());
+                    break;
+                default: // dataCadastro
+                    if (c1.getDataCadastro() != null && c2.getDataCadastro() != null) {
+                        resultado = c1.getDataCadastro().compareTo(c2.getDataCadastro());
+                    }
+                    break;
+            }
+            return "DESC".equalsIgnoreCase(direcao) ? -resultado : resultado;
+        });
+        
+        // Aplicar paginação
         Integer pagina = buscaDTO.getPagina() != null ? buscaDTO.getPagina() : 0;
         Integer tamanho = buscaDTO.getTamanho() != null && buscaDTO.getTamanho() > 0 ? buscaDTO.getTamanho() : 20;
-        Pageable pageable = PageRequest.of(pagina, tamanho, sort);
         
-        // Normalizar strings de busca (trim e string vazia se null/vazio para evitar problemas de tipo no PostgreSQL)
-        String placa = (buscaDTO.getPlaca() != null && !buscaDTO.getPlaca().trim().isEmpty()) 
-                ? buscaDTO.getPlaca().trim() : "";
-        String modelo = (buscaDTO.getModelo() != null && !buscaDTO.getModelo().trim().isEmpty()) 
-                ? buscaDTO.getModelo().trim() : "";
-        String marca = (buscaDTO.getMarca() != null && !buscaDTO.getMarca().trim().isEmpty()) 
-                ? buscaDTO.getMarca().trim() : "";
+        int inicio = pagina * tamanho;
+        int fim = Math.min(inicio + tamanho, carrosFiltrados.size());
+        List<Carro> carrosPaginados = inicio < carrosFiltrados.size() 
+            ? carrosFiltrados.subList(inicio, fim) 
+            : List.of();
         
-        // Converter datas se necessário
-        java.time.LocalDateTime dataInicio = buscaDTO.getDataInicio();
-        java.time.LocalDateTime dataFim = buscaDTO.getDataFim();
+        // Converter para DTO
+        List<CarroDTO> carrosDTO = carrosPaginados.stream()
+            .map(this::converterParaDTO)
+            .collect(Collectors.toList());
         
-        Page<Carro> carros = carroRepository.buscarComFiltros(
-            empresaId,
-            placa,
-            modelo,
-            marca,
-            buscaDTO.getQuilometragemMin(),
-            buscaDTO.getQuilometragemMax(),
-            dataInicio,
-            dataFim,
-            pageable
-        );
-        
-        return carros.map(this::converterParaDTO);
+        return new PageImpl<>(carrosDTO, PageRequest.of(pagina, tamanho), carrosFiltrados.size());
     }
     
     @Transactional(readOnly = true)
@@ -214,24 +284,6 @@ public class CarroService {
         // Registrar auditoria
         auditoriaService.registrarAcao("DELETE", "CARRO", id, usuarioEmail, empresaId, 
                                      dadosAnteriores, null, "Carro deletado");
-    }
-    
-    private Sort criarSort(String ordenarPor, String direcao) {
-        Sort.Direction direction = "ASC".equalsIgnoreCase(direcao) ? 
-                                   Sort.Direction.ASC : Sort.Direction.DESC;
-        
-        switch (ordenarPor != null ? ordenarPor.toLowerCase() : "datacadastro") {
-            case "quilometragem":
-                return Sort.by(direction, "quilometragem");
-            case "modelo":
-                return Sort.by(direction, "modelo");
-            case "marca":
-                return Sort.by(direction, "marca");
-            case "placa":
-                return Sort.by(direction, "placa");
-            default:
-                return Sort.by(direction, "dataCadastro");
-        }
     }
     
     private List<String> salvarFotos(List<MultipartFile> fotos, String placa) {
