@@ -36,7 +36,11 @@ public class CarroController {
     
     private Long obterEmpresaId(Authentication authentication) {
         String email = authentication.getName();
-        return usuarioService.obterUsuarioCompleto(email).getEmpresa().getId();
+        com.bancoai.model.Usuario usuario = usuarioService.obterUsuarioCompleto(email);
+        if (usuario.getEmpresa() == null) {
+            throw new RuntimeException("Usuário não possui empresa associada");
+        }
+        return usuario.getEmpresa().getId();
     }
     
     private Long obterEmpresaIdParaFiltro(Authentication authentication, Long empresaIdSelecionada) {
@@ -83,7 +87,7 @@ public class CarroController {
     }
     
     @PostMapping("/buscar")
-    public ResponseEntity<Page<CarroDTO>> buscarComFiltros(
+    public ResponseEntity<?> buscarComFiltros(
             @RequestBody BuscaCarroDTO buscaDTO,
             @RequestParam(value = "empresaId", required = false) Long empresaIdSelecionada,
             Authentication authentication) {
@@ -92,7 +96,13 @@ public class CarroController {
             Page<CarroDTO> carros = carroService.buscarComFiltros(buscaDTO, empresaId);
             return ResponseEntity.ok(carros);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            System.err.println("Erro ao buscar carros: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("Erro ao buscar carros: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Erro inesperado ao buscar carros: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("Erro inesperado ao buscar carros: " + e.getMessage());
         }
     }
     

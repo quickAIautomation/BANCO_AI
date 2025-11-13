@@ -126,9 +126,28 @@ public class CarroService {
     
     @Transactional(readOnly = true)
     public Page<CarroDTO> buscarComFiltros(BuscaCarroDTO buscaDTO, Long empresaId) {
-        // Configurar ordenação
-        Sort sort = criarSort(buscaDTO.getOrdenarPor(), buscaDTO.getDirecao());
-        Pageable pageable = PageRequest.of(buscaDTO.getPagina(), buscaDTO.getTamanho(), sort);
+        // Validar empresaId
+        if (empresaId == null) {
+            throw new RuntimeException("Empresa não encontrada");
+        }
+        
+        // Configurar ordenação com valores padrão
+        String ordenarPor = buscaDTO.getOrdenarPor() != null ? buscaDTO.getOrdenarPor() : "dataCadastro";
+        String direcao = buscaDTO.getDirecao() != null ? buscaDTO.getDirecao() : "DESC";
+        Sort sort = criarSort(ordenarPor, direcao);
+        
+        // Validar e configurar paginação
+        Integer pagina = buscaDTO.getPagina() != null ? buscaDTO.getPagina() : 0;
+        Integer tamanho = buscaDTO.getTamanho() != null && buscaDTO.getTamanho() > 0 ? buscaDTO.getTamanho() : 20;
+        Pageable pageable = PageRequest.of(pagina, tamanho, sort);
+        
+        // Normalizar strings de busca (trim e null se vazio)
+        String placa = buscaDTO.getPlaca() != null && !buscaDTO.getPlaca().trim().isEmpty() 
+                ? buscaDTO.getPlaca().trim() : null;
+        String modelo = buscaDTO.getModelo() != null && !buscaDTO.getModelo().trim().isEmpty() 
+                ? buscaDTO.getModelo().trim() : null;
+        String marca = buscaDTO.getMarca() != null && !buscaDTO.getMarca().trim().isEmpty() 
+                ? buscaDTO.getMarca().trim() : null;
         
         // Converter datas se necessário
         java.time.LocalDateTime dataInicio = buscaDTO.getDataInicio();
@@ -136,9 +155,9 @@ public class CarroService {
         
         Page<Carro> carros = carroRepository.buscarComFiltros(
             empresaId,
-            buscaDTO.getPlaca(),
-            buscaDTO.getModelo(),
-            buscaDTO.getMarca(),
+            placa,
+            modelo,
+            marca,
             buscaDTO.getQuilometragemMin(),
             buscaDTO.getQuilometragemMax(),
             dataInicio,

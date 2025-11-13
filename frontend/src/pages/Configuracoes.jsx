@@ -26,7 +26,11 @@ function Configuracoes({ setIsAuthenticated }) {
       console.error('Erro ao carregar API Keys:', error)
       if (error.response?.status === 401) {
         setIsAuthenticated(false)
-        navigate('/login')
+        // O interceptor já vai redirecionar, mas garantimos que o estado seja limpo
+        setApiKeys([])
+      } else {
+        // Se não for 401, limpar lista para evitar mostrar dados antigos
+        setApiKeys([])
       }
     } finally {
       setLoading(false)
