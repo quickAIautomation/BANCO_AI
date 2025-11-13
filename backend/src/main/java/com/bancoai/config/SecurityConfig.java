@@ -76,7 +76,7 @@ public class SecurityConfig {
         // Configuração específica para API pública (permite qualquer origem, mas requer X-API-Key)
         CorsConfiguration publicApiConfiguration = new CorsConfiguration();
         publicApiConfiguration.setAllowedOriginPatterns(List.of("*"));
-        publicApiConfiguration.setAllowedMethods(Arrays.asList("GET", "OPTIONS"));
+        publicApiConfiguration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         publicApiConfiguration.setAllowedHeaders(Arrays.asList("X-API-Key", "Authorization", "Content-Type"));
         publicApiConfiguration.setAllowCredentials(false);
         
