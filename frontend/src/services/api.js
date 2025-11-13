@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { getAuthHeader, removeToken } from '../utils/auth'
+import { removeToken, getToken } from '../utils/auth'
 
 // Usa variável de ambiente ou fallback para localhost
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
@@ -14,14 +14,19 @@ const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json'
-  }
+  },
+  timeout: 30000 // 30 segundos de timeout
 })
+
+// Flag para evitar múltiplos redirecionamentos
+let isRedirecting = false
 
 api.interceptors.request.use(
   (config) => {
-    const authHeader = getAuthHeader()
-    if (authHeader.Authorization) {
-      config.headers.Authorization = authHeader.Authorization
+    const token = getToken()
+    // Se não tem token, não adiciona header (mas deixa a requisição prosseguir para o backend retornar 401)
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
     }
     return config
   },
@@ -33,10 +38,28 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Tratar erro 401 (Não autorizado - token expirado ou inválido)
     if (error.response?.status === 401) {
-      removeToken()
-      window.location.href = '/login'
+      // Evitar múltiplos redirecionamentos
+      if (!isRedirecting) {
+        isRedirecting = true
+        removeToken()
+        
+        // Limpar qualquer estado da aplicação
+        console.warn('Token expirado ou inválido. Redirecionando para login...')
+        
+        // Usar window.location para garantir que toda a aplicação seja recarregada
+        setTimeout(() => {
+          window.location.href = '/login'
+        }, 100)
+      }
     }
+    
+    // Tratar erro de timeout ou conexão
+    if (error.code === 'ECONNABORTED' || error.message === 'Network Error') {
+      console.error('Erro de conexão com o servidor')
+    }
+    
     return Promise.reject(error)
   }
 )

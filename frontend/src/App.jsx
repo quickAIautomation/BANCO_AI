@@ -20,6 +20,17 @@ function App() {
     const token = getToken()
     setIsAuthenticated(!!token)
     setLoading(false)
+    
+    // Verificar periodicamente se o token ainda existe (a cada 5 minutos)
+    // Isso ajuda a detectar se o token foi removido em outra aba ou pelo interceptor
+    const interval = setInterval(() => {
+      const currentToken = getToken()
+      if (!currentToken) {
+        setIsAuthenticated(false)
+      }
+    }, 5 * 60 * 1000) // 5 minutos
+    
+    return () => clearInterval(interval)
   }, [])
 
   if (loading) {

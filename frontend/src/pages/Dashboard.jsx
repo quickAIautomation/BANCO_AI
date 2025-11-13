@@ -81,6 +81,11 @@ function Dashboard({ setIsAuthenticated }) {
       }
     } catch (error) {
       console.error('Erro ao carregar empresas:', error)
+      if (error.response?.status === 401) {
+        setIsAuthenticated(false)
+        removeToken()
+        navigate('/login')
+      }
     }
   }
 
@@ -97,6 +102,14 @@ function Dashboard({ setIsAuthenticated }) {
       setCarros(response.data)
     } catch (error) {
       console.error('Erro ao carregar carros:', error)
+      if (error.response?.status === 401) {
+        setIsAuthenticated(false)
+        removeToken()
+        navigate('/login')
+        return
+      }
+      // Se não for 401, limpar carros para evitar mostrar dados antigos
+      setCarros([])
     } finally {
       setLoading(false)
     }
@@ -117,17 +130,17 @@ function Dashboard({ setIsAuthenticated }) {
       }
       
       const buscaDTO = {
-        placa: filtros.placa || null,
-        modelo: filtros.modelo || null,
-        marca: filtros.marca || null,
-        quilometragemMin: filtros.quilometragemMin ? parseInt(filtros.quilometragemMin) : null,
-        quilometragemMax: filtros.quilometragemMax ? parseInt(filtros.quilometragemMax) : null,
+        placa: filtros.placa && filtros.placa.trim() !== '' ? filtros.placa.trim() : null,
+        modelo: filtros.modelo && filtros.modelo.trim() !== '' ? filtros.modelo.trim() : null,
+        marca: filtros.marca && filtros.marca.trim() !== '' ? filtros.marca.trim() : null,
+        quilometragemMin: filtros.quilometragemMin && filtros.quilometragemMin !== '' ? parseInt(filtros.quilometragemMin) : null,
+        quilometragemMax: filtros.quilometragemMax && filtros.quilometragemMax !== '' ? parseInt(filtros.quilometragemMax) : null,
         dataInicio: dataInicio,
         dataFim: dataFim,
-        ordenarPor: filtros.ordenarPor,
-        direcao: filtros.direcao,
-        pagina: filtros.pagina,
-        tamanho: filtros.tamanho
+        ordenarPor: filtros.ordenarPor || 'dataCadastro',
+        direcao: filtros.direcao || 'DESC',
+        pagina: filtros.pagina || 0,
+        tamanho: filtros.tamanho || 20
       }
       
       // Se for admin e tiver empresa selecionada, passar como parâmetro
@@ -136,12 +149,21 @@ function Dashboard({ setIsAuthenticated }) {
         params.empresaId = empresaSelecionada
       }
       
+      console.log('Enviando busca:', buscaDTO, params)
+      
       const response = await api.post('/carros/buscar', buscaDTO, { params })
       setCarros(response.data.content || [])
       setTotalPages(response.data.totalPages || 0)
       setLoading(false)
     } catch (error) {
       console.error('Erro ao buscar carros:', error)
+      console.error('Detalhes do erro:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      })
+      const errorMessage = error.response?.data || error.message || 'Erro ao buscar carros. Tente novamente.'
+      alert(typeof errorMessage === 'string' ? errorMessage : 'Erro ao buscar carros. Tente novamente.')
       setLoading(false)
     }
   }
