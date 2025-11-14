@@ -163,21 +163,15 @@ public class CarroService {
         String marca = (buscaDTO.getMarca() != null && !buscaDTO.getMarca().trim().isEmpty()) 
             ? buscaDTO.getMarca().trim() : null;
         
-        // Preparar ordenação
+        // Preparar ordenação (a query nativa já ordena por data_cadastro DESC)
+        // Para outras ordenações, precisaríamos modificar a query nativa ou usar uma abordagem diferente
         String ordenarPor = buscaDTO.getOrdenarPor() != null ? buscaDTO.getOrdenarPor() : "dataCadastro";
         String direcao = buscaDTO.getDirecao() != null ? buscaDTO.getDirecao() : "DESC";
         
-        // Criar Pageable com ordenação
-        org.springframework.data.domain.Sort sort = org.springframework.data.domain.Sort.by(
-            "DESC".equalsIgnoreCase(direcao) 
-                ? org.springframework.data.domain.Sort.Direction.DESC 
-                : org.springframework.data.domain.Sort.Direction.ASC,
-            ordenarPor
-        );
-        
+        // Criar Pageable (sem sort, pois a ordenação está na query nativa)
         Integer pagina = buscaDTO.getPagina() != null ? buscaDTO.getPagina() : 0;
         Integer tamanho = buscaDTO.getTamanho() != null ? buscaDTO.getTamanho() : 20;
-        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(pagina, tamanho, sort);
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(pagina, tamanho);
         
         // Usar query otimizada do banco (não carrega tudo em memória)
         org.springframework.data.domain.Page<Carro> carrosPage = carroRepository.buscarComFiltros(
