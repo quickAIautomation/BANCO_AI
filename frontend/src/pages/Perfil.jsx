@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import { setUserRole } from '../utils/auth'
-import { FaUser, FaEnvelope, FaLock, FaArrowLeft, FaCheck } from 'react-icons/fa'
+import { FaUser, FaEnvelope, FaLock, FaArrowLeft, FaCheck, FaUpload, FaCamera } from 'react-icons/fa'
 
 function Perfil({ setIsAuthenticated }) {
   const [usuario, setUsuario] = useState({ email: '', nome: '' })
@@ -11,6 +11,8 @@ function Perfil({ setIsAuthenticated }) {
   const [showSenhaForm, setShowSenhaForm] = useState(false)
   const [erro, setErro] = useState('')
   const [sucesso, setSucesso] = useState('')
+  const [fotoPreview, setFotoPreview] = useState(null)
+  const [loadingFoto, setLoadingFoto] = useState(false)
   const navigate = useNavigate()
 
   // Formulário de email
@@ -35,6 +37,16 @@ function Perfil({ setIsAuthenticated }) {
       // Atualizar role no localStorage se necessário
       if (response.data.role) {
         setUserRole(response.data.role)
+      }
+      // Carregar preview da foto se existir
+      if (response.data.foto) {
+        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
+        const fotoUrl = response.data.foto.startsWith('http') 
+          ? response.data.foto 
+          : `${apiBaseUrl.replace('/api', '')}${response.data.foto}`
+        setFotoPreview(fotoUrl)
+      } else {
+        setFotoPreview(null)
       }
     } catch (error) {
       console.error('Erro ao carregar perfil:', error)
@@ -103,6 +115,39 @@ function Perfil({ setIsAuthenticated }) {
       setLoadingSenha(false)
     }
   }
+  
+  const handleFotoClick = () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'image/*'
+    input.onchange = async (e) => {
+      const file = e.target.files[0]
+      if (file) {
+        setLoadingFoto(true)
+        setErro('')
+        setSucesso('')
+        
+        try {
+          const formData = new FormData()
+          formData.append('foto', file)
+          
+          await api.put('/usuarios/perfil/foto', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          })
+          
+          setSucesso('Foto atualizada com sucesso!')
+          carregarPerfil()
+        } catch (error) {
+          setErro(error.response?.data || 'Erro ao atualizar foto')
+        } finally {
+          setLoadingFoto(false)
+        }
+      }
+    }
+    input.click()
+  }
 
   if (loading) {
     return (
@@ -125,6 +170,7 @@ function Perfil({ setIsAuthenticated }) {
               <button
                 onClick={() => navigate('/dashboard')}
                 className="text-white hover:text-red-600 transition-colors"
+                aria-label="Voltar"
               >
                 <FaArrowLeft className="text-2xl" />
               </button>
@@ -152,13 +198,53 @@ function Perfil({ setIsAuthenticated }) {
         {/* Informações do Usuário */}
         <div className="bg-white rounded-lg shadow-lg p-8 mb-6 border-2 border-red-600">
           <div className="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6">
-            <div className="bg-red-600 rounded-full p-6 flex-shrink-0 shadow-lg">
-              <FaUser className="text-white text-4xl" />
-            </div>
+            {fotoPreview ? (
+              <button
+                onClick={handleFotoClick}
+                disabled={loadingFoto}
+                className="flex-shrink-0 relative group cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-transform hover:scale-105"
+                title="Clique para alterar foto"
+              >
+                <img
+                  src={fotoPreview}
+                  alt={usuario.nome || 'Usuário'}
+                  className="w-24 h-24 rounded-full object-cover border-4 border-red-600 shadow-lg transition-all group-hover:border-red-500 group-hover:shadow-xl"
+                />
+                {loadingFoto && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 rounded-full">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 rounded-full transition-all duration-300 flex items-center justify-center">
+                  <div className="bg-red-600 rounded-full p-3 shadow-lg transform scale-0 group-hover:scale-100 transition-transform duration-300">
+                    <FaCamera className="text-white text-xl" />
+                  </div>
+                </div>
+              </button>
+            ) : (
+              <button
+                onClick={handleFotoClick}
+                disabled={loadingFoto}
+                className="bg-red-600 rounded-full p-6 flex-shrink-0 shadow-lg hover:bg-red-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed relative group hover:scale-110 hover:shadow-2xl"
+                title="Clique para adicionar foto"
+              >
+                <FaUser className="text-white text-4xl transition-opacity group-hover:opacity-0 duration-300" />
+                {loadingFoto && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 rounded-full">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                  </div>
+                )}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="bg-white rounded-full p-3 shadow-lg">
+                    <FaCamera className="text-red-600 text-2xl" />
+                  </div>
+                </div>
+              </button>
+            )}
             <div className="flex-1 text-center md:text-left">
               <div className="mb-3">
                 <span className="inline-block bg-red-100 text-red-700 text-xs uppercase tracking-wide font-bold px-3 py-1 rounded-full">
-                  Administrador
+                  {usuario.roleDescricao || usuario.role || 'Usuário'}
                 </span>
               </div>
               <h2 className="text-3xl font-bold text-black mb-3 break-words">
@@ -187,7 +273,7 @@ function Perfil({ setIsAuthenticated }) {
                 setErro('')
                 setSucesso('')
               }}
-              className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+              className="btn-primary"
             >
               {showEmailForm ? 'Cancelar' : 'Alterar Email'}
             </button>
@@ -222,7 +308,7 @@ function Perfil({ setIsAuthenticated }) {
               <button
                 type="submit"
                 disabled={loadingEmail}
-                className="w-full bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors disabled:opacity-50"
+                className="btn-primary w-full disabled:opacity-50"
               >
                 {loadingEmail ? 'Atualizando...' : 'Atualizar Email'}
               </button>
@@ -243,7 +329,7 @@ function Perfil({ setIsAuthenticated }) {
                 setErro('')
                 setSucesso('')
               }}
-              className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+              className="btn-primary"
             >
               {showSenhaForm ? 'Cancelar' : 'Alterar Senha'}
             </button>
@@ -292,7 +378,7 @@ function Perfil({ setIsAuthenticated }) {
               <button
                 type="submit"
                 disabled={loadingSenha}
-                className="w-full bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors disabled:opacity-50"
+                className="btn-primary w-full disabled:opacity-50"
               >
                 {loadingSenha ? 'Atualizando...' : 'Atualizar Senha'}
               </button>

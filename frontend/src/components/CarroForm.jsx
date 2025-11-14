@@ -115,7 +115,7 @@ function CarroForm({ carro, onClose, onSuccess }) {
       }
 
       onSuccess()
-      onClose()
+      onClose(true) // Passar true para indicar que foi criado/editado com sucesso
     } catch (error) {
       setErro(error.response?.data?.message || 'Erro ao salvar carro. Tente novamente.')
     } finally {
@@ -124,8 +124,8 @@ function CarroForm({ carro, onClose, onSuccess }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 modal-overlay flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div className="modal-content rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-black">
             {carro ? 'Editar Carro' : 'Novo Carro'}
@@ -138,9 +138,9 @@ function CarroForm({ carro, onClose, onSuccess }) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 bg-gray-900">
           {erro && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <div className="bg-red-900/50 border border-red-600 text-red-200 px-4 py-3 rounded">
               {erro}
             </div>
           )}
@@ -254,7 +254,7 @@ function CarroForm({ carro, onClose, onSuccess }) {
               Fotos do Veículo
             </label>
             <div className="flex items-center space-x-4">
-              <label className="flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 cursor-pointer transition-colors">
+              <label className="btn-primary flex items-center space-x-2 cursor-pointer">
                 <FaUpload />
                 <span>Selecionar Fotos</span>
                 <input
@@ -290,14 +290,14 @@ function CarroForm({ carro, onClose, onSuccess }) {
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-red-600 text-white px-6 py-3 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-600 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Salvando...' : carro ? 'Atualizar' : 'Cadastrar'}
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 bg-black text-white px-6 py-3 rounded-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-600 font-medium transition-colors"
+              className="btn-secondary flex-1"
             >
               Cancelar
             </button>

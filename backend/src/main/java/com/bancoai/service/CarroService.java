@@ -29,14 +29,20 @@ public class CarroService {
     private final CarroRepository carroRepository;
     private final EmpresaRepository empresaRepository;
     private final AuditoriaService auditoriaService;
+    private final EmailService emailService;
+    private final UsuarioService usuarioService;
     private final String uploadDir = "uploads/carros";
     
     public CarroService(CarroRepository carroRepository, 
                        EmpresaRepository empresaRepository,
-                       AuditoriaService auditoriaService) {
+                       AuditoriaService auditoriaService,
+                       EmailService emailService,
+                       UsuarioService usuarioService) {
         this.carroRepository = carroRepository;
         this.empresaRepository = empresaRepository;
         this.auditoriaService = auditoriaService;
+        this.emailService = emailService;
+        this.usuarioService = usuarioService;
         createUploadDirectory();
     }
     
@@ -80,6 +86,23 @@ public class CarroService {
         auditoriaService.registrarAcao("CREATE", "CARRO", carroSalvo.getId(), 
                                      usuarioEmail, empresaId, null, carroSalvo, 
                                      "Carro criado");
+        
+        // Enviar email de notificação se o usuário tiver habilitado
+        try {
+            com.bancoai.model.Usuario usuario = usuarioService.obterUsuarioCompleto(usuarioEmail);
+            if (usuario.getEmailNotificacoesAtivadas() != null && usuario.getEmailNotificacoesAtivadas()) {
+                emailService.enviarEmailNotificacaoCarro(
+                    usuario.getEmail(),
+                    usuario.getNome(),
+                    carroSalvo.getMarca(),
+                    carroSalvo.getModelo(),
+                    carroSalvo.getPlaca()
+                );
+            }
+        } catch (Exception e) {
+            // Não interromper o fluxo se houver erro ao enviar email
+            System.err.println("AVISO: Erro ao enviar email de notificação: " + e.getMessage());
+        }
         
         return converterParaDTO(carroSalvo);
     }

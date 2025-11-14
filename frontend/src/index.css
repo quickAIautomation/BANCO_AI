@@ -9,11 +9,248 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #000000;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Tema Escuro (padrão) - Gradiente estilo Spotify */
+body,
+.dark body {
+  background: linear-gradient(180deg, #000000 0%, #0f0000 15%, #1f0000 30%, #2f0000 50%, #3f0000 70%, #4f0000 85%, #5f0000 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
   color: #FFFFFF;
+}
+
+/* Remover bg-black das páginas para mostrar o gradiente */
+.dark .min-h-screen.bg-black {
+  background: transparent !important;
+}
+
+/* Tema Claro - Gradiente off-white para cinza sutil */
+.light body {
+  background: linear-gradient(180deg, #FAFAFA 0%, #F5F5F5 20%, #F0F0F0 40%, #EBEBEB 60%, #E5E5E5 80%, #E0E0E0 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  color: #1F2937;
+}
+
+/* Remover bg-black e bg-white das páginas para mostrar o gradiente */
+.light .min-h-screen.bg-black,
+.light .min-h-screen.bg-white,
+.light .min-h-screen.bg-gray-50 {
+  background: transparent !important;
+}
+
+/* Ajustes para componentes no tema claro */
+.light .bg-black {
+  background-color: #FFFFFF;
+}
+
+.light .bg-gray-900 {
+  background-color: #F8F9FA;
+}
+
+.light .bg-gray-800 {
+  background-color: #F1F3F5;
+}
+
+.light .bg-gray-700 {
+  background-color: #E9ECEF;
+}
+
+.light .text-white {
+  color: #212529;
+}
+
+.light .text-gray-300 {
+  color: #495057;
+}
+
+.light .text-gray-400 {
+  color: #6C757D;
+}
+
+.light .border-gray-700,
+.light .border-gray-800 {
+  border-color: #DEE2E6;
+}
+
+.light .text-gray-200 {
+  color: #343A40;
+}
+
+/* Header no tema escuro - manter opaco para contraste */
+.dark header {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+  backdrop-filter: blur(10px);
+}
+
+/* Header no tema claro - cor diferenciada para hierarquia visual */
+.light header {
+  background: linear-gradient(135deg, #2C3E50 0%, #34495E 100%) !important;
+  backdrop-filter: blur(10px);
+  border-color: #1A252F !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Cores específicas para elementos comuns no tema claro */
+
+.light header .text-white {
+  color: #FFFFFF !important;
+}
+
+.light header .text-red-600 {
+  color: #FF6B6B !important;
+}
+
+.light header .hover\:text-red-600:hover {
+  color: #FF8787 !important;
+}
+
+/* Garantir que texto e ícones no header sejam brancos no tema claro */
+.light header .text-white {
+  color: #FFFFFF !important;
+}
+
+.light header h1 {
+  color: #FFFFFF !important;
+}
+
+.light .bg-red-600 {
+  background-color: #DC3545;
+}
+
+.light .bg-red-600:hover {
+  background-color: #C82333;
+}
+
+.light .text-red-600 {
+  color: #DC3545;
+}
+
+.light .hover\:text-red-600:hover {
+  color: #DC3545;
+}
+
+/* Menu dropdown do hambúrguer no tema claro - cor diferenciada do header */
+.light .user-menu-dropdown {
+  background-color: #FFFFFF !important;
+  border-color: #E1E8ED !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 4px 10px -2px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Forçar cor escura nos botões do menu no tema claro, mesmo com text-white */
+.light .user-menu-dropdown .user-menu-item,
+.light .user-menu-dropdown button.user-menu-item,
+.light .user-menu-dropdown .text-white {
+  color: #2C3E50 !important;
+}
+
+.light .user-menu-dropdown .user-menu-item svg,
+.light .user-menu-dropdown button.user-menu-item svg,
+.light .user-menu-dropdown svg {
+  color: #2C3E50 !important;
+  fill: #2C3E50 !important;
+}
+
+.light .user-menu-item:hover {
+  background-color: #F8F9FA !important;
+  color: #1A252F !important;
+}
+
+.light .user-menu-item:hover svg {
+  color: #1A252F !important;
+  fill: #1A252F !important;
+}
+
+.light .user-menu-divider {
+  border-color: #E1E8ED !important;
+}
+
+/* Dropdown de empresa no tema claro - manter branco para contraste com header */
+.light header .bg-gray-900 {
+  background-color: #FFFFFF !important;
+}
+
+.light header .border-gray-700 {
+  border-color: #E1E8ED !important;
+}
+
+.light header .text-gray-300 {
+  color: #2C3E50 !important;
+}
+
+.light header .hover\:bg-gray-800:hover {
+  background-color: #F8F9FA !important;
+}
+
+/* Ajustes para botões no header no tema claro */
+.light header .btn-primary {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+  color: #FFFFFF !important;
+}
+
+.light header .btn-secondary {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: #FFFFFF !important;
+  backdrop-filter: blur(10px);
+}
+
+.light header .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.25) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
 }
 
 * {
   box-sizing: border-box;
+}
+
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.3s ease-out;
+}
+
+/* Animações de transição de página */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-transition {
+  width: 100%;
+  min-height: 100vh;
+  background: transparent !important;
+}
+
+/* Garantir que o gradiente apareça em ambos os temas */
+.dark .page-transition,
+.light .page-transition {
+  background: transparent !important;
+}
+
+.page-transition-fadeIn {
+  animation: fadeInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Transição suave para elementos da página */
+.page-content {
+  animation: fadeInUp 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 

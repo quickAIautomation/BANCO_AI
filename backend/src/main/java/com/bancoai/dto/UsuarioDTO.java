@@ -13,6 +13,8 @@ public class UsuarioDTO {
     private String nome;
     private Role role;
     private String roleDescricao;
+    private String foto;
+    private Boolean emailNotificacoesAtivadas;
     
     public UsuarioDTO(String email, String nome) {
         this.email = email;

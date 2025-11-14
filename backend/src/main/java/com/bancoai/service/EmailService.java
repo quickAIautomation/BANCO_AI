@@ -102,5 +102,37 @@ public class EmailService {
             throw new RuntimeException("Erro inesperado ao enviar email: " + e.getMessage());
         }
     }
+    
+    public void enviarEmailNotificacaoCarro(String email, String nomeUsuario, String marca, String modelo, String placa) {
+        if (!emailEnabled) {
+            System.out.println("AVISO: Envio de email está desabilitado. Notificação de carro não será enviada.");
+            return;
+        }
+        
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromEmail);
+        message.setTo(email);
+        message.setSubject("Novo Carro Cadastrado - BANCO AI");
+        
+        String texto = "Olá " + nomeUsuario + ",\n\n" +
+                "Um novo carro foi cadastrado no sistema:\n\n" +
+                "Marca: " + marca + "\n" +
+                "Modelo: " + modelo + "\n" +
+                "Placa: " + placa + "\n\n" +
+                "Acesse o sistema para ver mais detalhes.\n\n" +
+                "Atenciosamente,\n" +
+                "Equipe BANCO AI";
+        
+        message.setText(texto);
+        
+        try {
+            mailSender.send(message);
+            System.out.println("Email de notificação de carro enviado com sucesso para: " + email);
+        } catch (Exception e) {
+            // Não lançar exceção para não interromper o cadastro do carro
+            System.err.println("AVISO: Erro ao enviar email de notificação de carro para " + email + ": " + e.getMessage());
+            // Log do erro mas não interrompe o fluxo
+        }
+    }
 }
 
