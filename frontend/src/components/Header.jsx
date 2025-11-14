@@ -45,12 +45,13 @@ function Header({
         setUserMenuOpen(false)
       }
       
-      if (clickedOutsideEmpresa) {
+      // Só fechar menu de empresa se não estiver no mobile (onde usamos overlay)
+      if (clickedOutsideEmpresa && window.innerWidth >= 768) {
         setEmpresaMenuOpen(false)
       }
     }
 
-    if (userMenuOpen || empresaMenuOpen) {
+    if (userMenuOpen || (empresaMenuOpen && window.innerWidth >= 768)) {
       document.addEventListener('mousedown', handleClickOutside)
     }
 
@@ -251,9 +252,10 @@ function Header({
               ) : (
                 <>
                   {userRole === 'ADMIN' && empresas.length > 0 && (
-                    <div className="relative">
+                    <div className="relative" ref={empresaMenuRef}>
                       <button
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation()
                           setEmpresaMenuOpen(!empresaMenuOpen)
                         }}
                         className="btn-secondary flex items-center space-x-2 w-full justify-between text-sm px-4 py-3"
@@ -269,17 +271,21 @@ function Header({
                       {empresaMenuOpen && (
                         <>
                           <div 
-                            className="fixed inset-0 z-10" 
-                            onClick={() => setEmpresaMenuOpen(false)}
+                            className="fixed inset-0 z-[10000]" 
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setEmpresaMenuOpen(false)
+                            }}
                           />
-                          <div className="absolute top-full left-0 right-0 mt-2 bg-gray-900 border border-gray-700 rounded-lg shadow-xl z-20">
+                          <div className="absolute top-full left-0 right-0 mt-2 bg-gray-900 border border-gray-700 rounded-lg shadow-xl z-[10001]">
                             {empresas.map((empresa) => (
                               <button
                                 key={empresa.id}
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation()
                                   onEmpresaChange && onEmpresaChange(empresa.id)
                                   setEmpresaMenuOpen(false)
-                                  setMenuOpen(false)
+                                  // Não fechar o menu principal ao trocar empresa
                                 }}
                                 className={`w-full text-left px-4 py-3 flex items-center space-x-2 transition-colors ${
                                   empresa.id === empresaSelecionada

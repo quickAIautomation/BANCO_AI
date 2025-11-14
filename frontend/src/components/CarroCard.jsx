@@ -1,40 +1,95 @@
-import { FaEdit, FaTrash, FaCar, FaTachometerAlt, FaCalendarAlt } from 'react-icons/fa'
+import { useState, useEffect } from 'react'
+import { FaEdit, FaTrash, FaCar, FaTachometerAlt, FaCalendarAlt, FaChevronLeft, FaChevronRight } from 'react-icons/fa'
 import { getApiBaseUrl } from '../services/api'
 
 function CarroCard({ carro, onEdit, onDelete, canEdit = true, canDelete = true }) {
-  const primeiraFoto = carro.fotos && carro.fotos.length > 0 
-    ? `${getApiBaseUrl()}${carro.fotos[0]}` 
-    : null
+  const [fotoAtual, setFotoAtual] = useState(0)
+  
+  const fotos = carro.fotos && carro.fotos.length > 0 
+    ? carro.fotos.map(foto => `${getApiBaseUrl()}${foto}`)
+    : []
+  
+  const fotoExibida = fotos.length > 0 ? fotos[fotoAtual] : null
+  const temMultiplasFotos = fotos.length > 1
+
+  // Resetar índice da foto quando o carro mudar
+  useEffect(() => {
+    setFotoAtual(0)
+  }, [carro.id])
 
   const handleImageError = (e) => {
     e.target.style.display = 'none'
     e.target.nextSibling?.classList.remove('hidden')
   }
 
+  const proximaFoto = (e) => {
+    e.stopPropagation()
+    setFotoAtual((prev) => (prev + 1) % fotos.length)
+  }
+
+  const fotoAnterior = (e) => {
+    e.stopPropagation()
+    setFotoAtual((prev) => (prev - 1 + fotos.length) % fotos.length)
+  }
+
   return (
     <div className="card-elevated overflow-hidden fade-in">
-      {/* Imagem do Carro com Preview em Hover */}
+      {/* Imagem do Carro com Navegação de Fotos */}
       <div className="h-48 bg-gray-800 flex items-center justify-center overflow-hidden relative group">
-        {primeiraFoto ? (
+        {fotoExibida ? (
           <>
             <img 
-              src={primeiraFoto} 
-              alt={`${carro.marca} ${carro.modelo}`}
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+              src={fotoExibida} 
+              alt={`${carro.marca} ${carro.modelo} - Foto ${fotoAtual + 1}`}
+              className="w-full h-full object-cover transition-opacity duration-300"
               onError={handleImageError}
             />
-            {/* Overlay com preview de outras fotos */}
-            {carro.fotos && carro.fotos.length > 1 && (
-              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                <div className="text-center">
-                  <FaCar className="text-white text-4xl mb-2 mx-auto" />
-                  <p className="text-white text-sm font-semibold">
-                    {carro.fotos.length} foto{carro.fotos.length > 1 ? 's' : ''}
-                  </p>
-                  <p className="text-white/80 text-xs mt-1">Clique para ver todas</p>
+            
+            {/* Controles de navegação de fotos */}
+            {temMultiplasFotos && (
+              <>
+                {/* Botão anterior */}
+                <button
+                  onClick={fotoAnterior}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all z-10"
+                  aria-label="Foto anterior"
+                >
+                  <FaChevronLeft />
+                </button>
+                
+                {/* Botão próximo */}
+                <button
+                  onClick={proximaFoto}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all z-10"
+                  aria-label="Próxima foto"
+                >
+                  <FaChevronRight />
+                </button>
+                
+                {/* Indicador de fotos */}
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/60 px-3 py-1 rounded-full flex items-center space-x-1 z-10">
+                  {fotos.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setFotoAtual(index)
+                      }}
+                      className={`w-2 h-2 rounded-full transition-all ${
+                        index === fotoAtual ? 'bg-red-600 w-6' : 'bg-white/50 hover:bg-white/70'
+                      }`}
+                      aria-label={`Ir para foto ${index + 1}`}
+                    />
+                  ))}
                 </div>
-              </div>
+                
+                {/* Contador de fotos */}
+                <div className="absolute top-2 right-2 bg-black/60 text-white px-2 py-1 rounded text-xs z-10">
+                  {fotoAtual + 1} / {fotos.length}
+                </div>
+              </>
             )}
+            
             <div className="hidden absolute inset-0 flex items-center justify-center bg-gray-800">
               <FaCar className="text-gray-600 text-6xl" />
             </div>

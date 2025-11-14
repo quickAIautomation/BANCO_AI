@@ -4,6 +4,7 @@ import com.bancoai.model.Carro;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -12,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface CarroRepository extends JpaRepository<Carro, Long> {
+public interface CarroRepository extends JpaRepository<Carro, Long>, JpaSpecificationExecutor<Carro> {
     Optional<Carro> findByPlacaAndEmpresaId(String placa, Long empresaId);
     boolean existsByPlacaAndEmpresaId(String placa, Long empresaId);
     
@@ -31,11 +32,14 @@ public interface CarroRepository extends JpaRepository<Carro, Long> {
     List<Object[]> countByMarca(@Param("empresaId") Long empresaId);
     
     // Query otimizada para busca com filtros (evita carregar tudo em memória)
-    // Usando JPQL que funciona melhor com parâmetros NULL
+    // Usando JPQL compatível com H2 e PostgreSQL
+    // Tratamento seguro de NULL: quando NULL, a condição OR retorna TRUE e ignora o filtro
+    // Quando não NULL, aplica o LIKE normalmente
+    // O service garante que strings vazias são convertidas para NULL antes de passar para a query
     @Query("SELECT c FROM Carro c WHERE c.empresa.id = :empresaId " +
-           "AND (:placa IS NULL OR UPPER(c.placa) LIKE CONCAT('%', UPPER(:placa), '%')) " +
-           "AND (:modelo IS NULL OR UPPER(c.modelo) LIKE CONCAT('%', UPPER(:modelo), '%')) " +
-           "AND (:marca IS NULL OR UPPER(c.marca) LIKE CONCAT('%', UPPER(:marca), '%')) " +
+           "AND (:placa IS NULL OR UPPER(c.placa) LIKE UPPER(:placa)) " +
+           "AND (:modelo IS NULL OR UPPER(c.modelo) LIKE UPPER(:modelo)) " +
+           "AND (:marca IS NULL OR UPPER(c.marca) LIKE UPPER(:marca)) " +
            "AND (:quilometragemMin IS NULL OR c.quilometragem >= :quilometragemMin) " +
            "AND (:quilometragemMax IS NULL OR c.quilometragem <= :quilometragemMax) " +
            "AND (:valorMin IS NULL OR c.valor >= :valorMin) " +

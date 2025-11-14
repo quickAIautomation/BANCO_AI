@@ -155,13 +155,14 @@ public class CarroService {
             throw new RuntimeException("Empresa não encontrada");
         }
         
-        // Preparar parâmetros para a query (normalizar strings vazias para null)
+        // Preparar parâmetros para a query (normalizar strings vazias para null e adicionar % para LIKE)
+        // O PostgreSQL precisa que os % sejam incluídos no parâmetro, não na query
         String placa = (buscaDTO.getPlaca() != null && !buscaDTO.getPlaca().trim().isEmpty()) 
-            ? buscaDTO.getPlaca().trim() : null;
+            ? "%" + buscaDTO.getPlaca().trim() + "%" : null;
         String modelo = (buscaDTO.getModelo() != null && !buscaDTO.getModelo().trim().isEmpty()) 
-            ? buscaDTO.getModelo().trim() : null;
+            ? "%" + buscaDTO.getModelo().trim() + "%" : null;
         String marca = (buscaDTO.getMarca() != null && !buscaDTO.getMarca().trim().isEmpty()) 
-            ? buscaDTO.getMarca().trim() : null;
+            ? "%" + buscaDTO.getMarca().trim() + "%" : null;
         
         // Preparar ordenação
         String ordenarPor = buscaDTO.getOrdenarPor() != null ? buscaDTO.getOrdenarPor() : "dataCadastro";

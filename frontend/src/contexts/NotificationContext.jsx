@@ -164,7 +164,7 @@ const ToastNotification = ({ notification, onClose }) => {
   
   return (
     <div
-      className={`toast-notification ${notification.type} text-white rounded-lg shadow-2xl p-4 flex items-start space-x-3`}
+      className={`toast-notification ${notification.type} text-white rounded-lg shadow-2xl p-3 md:p-4 flex items-start space-x-2 md:space-x-3`}
       style={{ '--progress-duration': `${notification.duration}ms` }}
     >
       <div className="flex-shrink-0 mt-0.5">
@@ -172,15 +172,15 @@ const ToastNotification = ({ notification, onClose }) => {
       </div>
       <div className="flex-1 min-w-0">
         {notification.title && (
-          <h4 className="font-semibold mb-1">{notification.title}</h4>
+          <h4 className="font-semibold mb-1 text-sm md:text-base">{notification.title}</h4>
         )}
-        <p className="text-sm opacity-90">{notification.message}</p>
+        <p className="text-xs md:text-sm opacity-90 break-words">{notification.message}</p>
       </div>
       <button
         onClick={onClose}
-        className="flex-shrink-0 text-white hover:text-gray-200 transition-colors"
+        className="flex-shrink-0 text-white hover:text-gray-200 transition-colors p-1"
       >
-        <FaTimes />
+        <FaTimes className="text-sm md:text-base" />
       </button>
     </div>
   )
@@ -193,7 +193,7 @@ const NotificationContainer = () => {
   if (notifications.length === 0) return null
 
   return (
-    <div className="fixed top-24 right-4 z-[10000] space-y-2 max-w-md w-full">
+    <div className="fixed top-20 md:top-24 right-2 md:right-4 left-2 md:left-auto z-[10000] space-y-2 max-w-md md:w-full w-[calc(100%-1rem)]">
       {notifications.map((notification) => {
         if (notification.type === 'confirm') {
           return <ConfirmDialog key={notification.id} notification={notification} />
