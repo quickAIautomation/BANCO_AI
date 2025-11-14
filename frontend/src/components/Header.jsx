@@ -26,7 +26,6 @@ function Header({
   const { history } = useNotification()
   const unreadCount = history.length > 0 ? history.length : 0
   const userMenuRefDesktop = useRef(null)
-  const userMenuRefMobile = useRef(null)
   const empresaMenuRef = useRef(null)
   
   // Determinar se deve mostrar botão de voltar (não mostrar no dashboard)
@@ -39,11 +38,10 @@ function Header({
   useEffect(() => {
     const handleClickOutside = (event) => {
       const clickedOutsideDesktop = !userMenuRefDesktop.current || !userMenuRefDesktop.current.contains(event.target)
-      const clickedOutsideMobile = !userMenuRefMobile.current || !userMenuRefMobile.current.contains(event.target)
       const clickedOutsideEmpresa = !empresaMenuRef.current || !empresaMenuRef.current.contains(event.target)
       
-      // Se clicou fora de ambos (ou um não existe), fecha o menu
-      if (clickedOutsideDesktop && clickedOutsideMobile) {
+      // Se clicou fora, fecha o menu
+      if (clickedOutsideDesktop) {
         setUserMenuOpen(false)
       }
       
@@ -218,74 +216,11 @@ function Header({
             )}
           </div>
 
-          {/* Botão Menu Mobile */}
-          <div className="md:hidden flex items-center space-x-2">
-            {/* Menu Hambúrguer do Usuário no Mobile também */}
-            <div className="relative" ref={userMenuRefMobile}>
-              <button
-                onClick={toggleUserMenu}
-                className="text-white hover:text-red-600 transition-colors p-2"
-                aria-label="Menu do usuário"
-              >
-                <FaBars className="text-2xl" />
-              </button>
-              {userMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-gray-900 rounded-lg shadow-xl border border-gray-800 z-[9999] user-menu-dropdown">
-                  <div className="py-2">
-                    <button
-                      onClick={() => {
-                        navigate('/notificacoes')
-                        setUserMenuOpen(false)
-                      }}
-                      className="w-full text-left text-white hover:bg-gray-800 flex items-center space-x-2 px-4 py-2 relative user-menu-item"
-                    >
-                      <FaBell />
-                      <span>Notificações</span>
-                      {unreadCount > 0 && (
-                        <span className="ml-auto bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                          {unreadCount > 9 ? '9+' : unreadCount}
-                        </span>
-                      )}
-                    </button>
-                    <button
-                      onClick={() => {
-                        navigate('/perfil')
-                        setUserMenuOpen(false)
-                      }}
-                      className="w-full text-left text-white hover:bg-gray-800 flex items-center space-x-2 px-4 py-2 user-menu-item"
-                    >
-                      <FaUser />
-                      <span>Perfil</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        navigate('/configuracoes')
-                        setUserMenuOpen(false)
-                      }}
-                      className="w-full text-left text-white hover:bg-gray-800 flex items-center space-x-2 px-4 py-2 user-menu-item"
-                    >
-                      <FaCog />
-                      <span>Configurações</span>
-                    </button>
-                    <div className="border-t border-gray-800 my-1 user-menu-divider"></div>
-                    <button
-                      onClick={() => {
-                        handleLogout()
-                        setUserMenuOpen(false)
-                      }}
-                      className="w-full text-left text-white hover:bg-gray-800 flex items-center space-x-2 px-4 py-2 user-menu-item"
-                    >
-                      <FaSignOutAlt />
-                      <span>Sair</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-            {/* Menu Principal Mobile */}
+          {/* Botão Menu Mobile - Menu único unificado */}
+          <div className="md:hidden">
             <button
               onClick={toggleMenu}
-              className="text-white hover:text-red-600 transition-colors"
+              className="text-white hover:text-red-600 transition-colors p-2"
               aria-label="Toggle menu"
             >
               {menuOpen ? <FaTimes className="text-2xl" /> : <FaBars className="text-2xl" />}
@@ -293,17 +228,17 @@ function Header({
           </div>
         </div>
 
-        {/* Menu Mobile - Dropdown */}
+        {/* Menu Mobile - Dropdown Unificado */}
         {menuOpen && (
           <div className="md:hidden mt-4 pb-4 border-t border-gray-800 pt-4">
-            <div className="flex flex-col space-y-3">
+            <div className="flex flex-col space-y-1">
               {shouldShowBack && (
                 <button
                   onClick={() => {
                     navigate(backTo)
                     setMenuOpen(false)
                   }}
-                  className="w-full text-left text-white hover:text-red-600 flex items-center space-x-2 px-4 py-2 transition-colors"
+                  className="w-full text-left text-white hover:bg-gray-800 flex items-center space-x-2 px-4 py-3 transition-colors rounded"
                 >
                   <FaArrowLeft />
                   <span>Voltar</span>
@@ -321,7 +256,7 @@ function Header({
                         onClick={() => {
                           setEmpresaMenuOpen(!empresaMenuOpen)
                         }}
-                        className="btn-secondary flex items-center space-x-2 w-full justify-between text-sm px-3 py-2"
+                        className="btn-secondary flex items-center space-x-2 w-full justify-between text-sm px-4 py-3"
                       >
                         <div className="flex items-center space-x-2">
                           <FaBuilding className="text-red-600" />
@@ -367,16 +302,16 @@ function Header({
                     </div>
                   )}
                   {canCreateCarro && (
-                          <button
-                            onClick={() => {
-                              onNovoCarro && onNovoCarro()
-                              setMenuOpen(false)
-                            }}
-                            className="btn-primary flex items-center space-x-2 w-full justify-center"
-                          >
-                            <FaPlus />
-                            <span>Novo Carro</span>
-                          </button>
+                    <button
+                      onClick={() => {
+                        onNovoCarro && onNovoCarro()
+                        setMenuOpen(false)
+                      }}
+                      className="btn-primary flex items-center space-x-2 w-full justify-center px-4 py-3"
+                    >
+                      <FaPlus />
+                      <span>Novo Carro</span>
+                    </button>
                   )}
                   {canManageEmpresas && (
                     <button
@@ -384,7 +319,7 @@ function Header({
                         navigate('/empresas')
                         setMenuOpen(false)
                       }}
-                      className="text-white hover:text-red-600 transition-colors flex items-center space-x-2 py-2"
+                      className="w-full text-left text-white hover:bg-gray-800 flex items-center space-x-2 px-4 py-3 transition-colors rounded"
                     >
                       <FaBuilding />
                       <span>Empresas</span>
@@ -392,6 +327,57 @@ function Header({
                   )}
                 </>
               )}
+              
+              {/* Separador */}
+              <div className="border-t border-gray-800 my-2"></div>
+              
+              {/* Menu do Usuário (Notificações, Perfil, Configurações, Sair) */}
+              <button
+                onClick={() => {
+                  navigate('/notificacoes')
+                  setMenuOpen(false)
+                }}
+                className="w-full text-left text-white hover:bg-gray-800 flex items-center space-x-2 px-4 py-3 transition-colors rounded relative"
+              >
+                <FaBell />
+                <span>Notificações</span>
+                {unreadCount > 0 && (
+                  <span className="ml-auto bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  navigate('/perfil')
+                  setMenuOpen(false)
+                }}
+                className="w-full text-left text-white hover:bg-gray-800 flex items-center space-x-2 px-4 py-3 transition-colors rounded"
+              >
+                <FaUser />
+                <span>Perfil</span>
+              </button>
+              <button
+                onClick={() => {
+                  navigate('/configuracoes')
+                  setMenuOpen(false)
+                }}
+                className="w-full text-left text-white hover:bg-gray-800 flex items-center space-x-2 px-4 py-3 transition-colors rounded"
+              >
+                <FaCog />
+                <span>Configurações</span>
+              </button>
+              <div className="border-t border-gray-800 my-1"></div>
+              <button
+                onClick={() => {
+                  handleLogout()
+                  setMenuOpen(false)
+                }}
+                className="w-full text-left text-white hover:bg-gray-800 flex items-center space-x-2 px-4 py-3 transition-colors rounded"
+              >
+                <FaSignOutAlt />
+                <span>Sair</span>
+              </button>
             </div>
           </div>
         )}
