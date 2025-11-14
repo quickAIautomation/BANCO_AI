@@ -96,16 +96,6 @@ function Usuarios({ setIsAuthenticated }) {
     }
   }
 
-  const handleAtivarDesativar = async (usuarioId, ativo) => {
-    try {
-      await api.put(`/usuarios/${usuarioId}/ativo`, !ativo)
-      carregarUsuarios()
-    } catch (error) {
-      console.error('Erro ao alterar status:', error)
-      alert('Erro ao alterar status')
-    }
-  }
-
   const handleRemoverUsuario = async (usuarioId, nome) => {
     if (window.confirm(`Tem certeza que deseja REMOVER permanentemente o usuário "${nome}"?\n\nEsta ação não pode ser desfeita e irá remover:\n- Todas as API Keys do usuário\n- Todos os relacionamentos com empresas\n- O usuário do sistema`)) {
       try {
@@ -342,14 +332,6 @@ function Usuarios({ setIsAuthenticated }) {
                     <option value="OPERADOR">Operador</option>
                     <option value="VISUALIZADOR">Visualizador</option>
                   </select>
-                  <button
-                    onClick={() => handleAtivarDesativar(usuario.id, usuario.ativo)}
-                    className={`w-full px-4 py-2 rounded-md text-white ${
-                      usuario.ativo ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-green-600 hover:bg-green-700'
-                    }`}
-                  >
-                    {usuario.ativo ? 'Desativar' : 'Ativar'}
-                  </button>
                   <button
                     onClick={() => handleRemoverUsuario(usuario.id, usuario.nome)}
                     className="w-full px-4 py-2 rounded-md text-white bg-red-600 hover:bg-red-700 flex items-center justify-center space-x-2 transition-colors"
