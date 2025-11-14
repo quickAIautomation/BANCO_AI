@@ -33,13 +33,13 @@ public interface CarroRepository extends JpaRepository<Carro, Long>, JpaSpecific
     
     // Query otimizada para busca com filtros (evita carregar tudo em memória)
     // Usando JPQL compatível com H2 e PostgreSQL
-    // Tratamento seguro de NULL: quando NULL, a condição OR retorna TRUE e ignora o filtro
-    // Quando não NULL, aplica o LIKE normalmente
-    // O service garante que strings vazias são convertidas para NULL antes de passar para a query
+    // CORRIGIDO: Aplica UPPER apenas nas colunas do banco, não nos parâmetros
+    // Isso evita o erro "function upper(bytea) does not exist" no PostgreSQL
+    // Os parâmetros já vêm em maiúsculas do service
     @Query("SELECT c FROM Carro c WHERE c.empresa.id = :empresaId " +
-           "AND (:placa IS NULL OR UPPER(c.placa) LIKE UPPER(:placa)) " +
-           "AND (:modelo IS NULL OR UPPER(c.modelo) LIKE UPPER(:modelo)) " +
-           "AND (:marca IS NULL OR UPPER(c.marca) LIKE UPPER(:marca)) " +
+           "AND (:placa IS NULL OR UPPER(c.placa) LIKE :placa) " +
+           "AND (:modelo IS NULL OR UPPER(c.modelo) LIKE :modelo) " +
+           "AND (:marca IS NULL OR UPPER(c.marca) LIKE :marca) " +
            "AND (:quilometragemMin IS NULL OR c.quilometragem >= :quilometragemMin) " +
            "AND (:quilometragemMax IS NULL OR c.quilometragem <= :quilometragemMax) " +
            "AND (:valorMin IS NULL OR c.valor >= :valorMin) " +
