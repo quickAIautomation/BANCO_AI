@@ -156,13 +156,14 @@ public class CarroService {
         }
         
         // Preparar parâmetros para a query (normalizar strings vazias para null e adicionar % para LIKE)
-        // O PostgreSQL precisa que os % sejam incluídos no parâmetro, não na query
+        // IMPORTANTE: Converter para maiúsculas ANTES de passar para a query para evitar erro no PostgreSQL
+        // O PostgreSQL não permite aplicar UPPER em parâmetros NULL, então fazemos a conversão no service
         String placa = (buscaDTO.getPlaca() != null && !buscaDTO.getPlaca().trim().isEmpty()) 
-            ? "%" + buscaDTO.getPlaca().trim() + "%" : null;
+            ? "%" + buscaDTO.getPlaca().trim().toUpperCase() + "%" : null;
         String modelo = (buscaDTO.getModelo() != null && !buscaDTO.getModelo().trim().isEmpty()) 
-            ? "%" + buscaDTO.getModelo().trim() + "%" : null;
+            ? "%" + buscaDTO.getModelo().trim().toUpperCase() + "%" : null;
         String marca = (buscaDTO.getMarca() != null && !buscaDTO.getMarca().trim().isEmpty()) 
-            ? "%" + buscaDTO.getMarca().trim() + "%" : null;
+            ? "%" + buscaDTO.getMarca().trim().toUpperCase() + "%" : null;
         
         // Preparar ordenação
         String ordenarPor = buscaDTO.getOrdenarPor() != null ? buscaDTO.getOrdenarPor() : "dataCadastro";
