@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Recursos from './pages/Recursos'
@@ -8,9 +8,12 @@ import Perfil from './pages/Perfil'
 import Empresas from './pages/Empresas'
 import Usuarios from './pages/Usuarios'
 import Configuracoes from './pages/Configuracoes'
+import Notificacoes from './pages/Notificacoes'
 import EsqueceuSenha from './pages/EsqueceuSenha'
 import ResetSenha from './pages/ResetSenha'
 import { getToken } from './utils/auth'
+import PageTransition from './components/PageTransition'
+import { initRevealOnScroll } from './utils/revealOnScroll'
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -30,7 +33,15 @@ function App() {
       }
     }, 5 * 60 * 1000) // 5 minutos
     
-    return () => clearInterval(interval)
+    // Inicializar reveal on scroll
+    const revealObserver = initRevealOnScroll()
+    
+    return () => {
+      clearInterval(interval)
+      if (revealObserver) {
+        revealObserver.disconnect()
+      }
+    }
   }, [])
 
   if (loading) {
@@ -43,6 +54,14 @@ function App() {
 
   return (
     <Router>
+      <AnimatedRoutes isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} />
+    </Router>
+  )
+}
+
+function AnimatedRoutes({ isAuthenticated, setIsAuthenticated }) {
+  return (
+    <PageTransition>
       <Routes>
         <Route 
           path="/login" 
@@ -99,13 +118,19 @@ function App() {
           } 
         />
         <Route 
+          path="/notificacoes" 
+          element={
+            isAuthenticated ? <Notificacoes setIsAuthenticated={setIsAuthenticated} /> : <Navigate to="/login" />
+          } 
+        />
+        <Route 
           path="/" 
           element={
             isAuthenticated ? <Navigate to="/dashboard" /> : <Navigate to="/recursos" />
           } 
         />
       </Routes>
-    </Router>
+    </PageTransition>
   )
 }
 

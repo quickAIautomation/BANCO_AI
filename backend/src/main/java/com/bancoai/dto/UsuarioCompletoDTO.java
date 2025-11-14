@@ -17,5 +17,6 @@ public class UsuarioCompletoDTO {
     private Long empresaId;
     private String empresaNome;
     private Boolean ativo;
+    private String foto;
 }
 

@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
-import { FaArrowLeft, FaKey, FaPlus, FaTrash, FaCheck, FaTimes, FaCopy } from 'react-icons/fa'
+import { FaArrowLeft, FaKey, FaPlus, FaTrash, FaCheck, FaTimes, FaCopy, FaMoon, FaSun, FaBell, FaBellSlash, FaCog, FaEnvelope, FaEnvelopeOpen, FaChevronDown, FaChevronUp } from 'react-icons/fa'
+import { useTheme } from '../contexts/ThemeContext'
+import { useNotification } from '../contexts/NotificationContext'
 
 function Configuracoes({ setIsAuthenticated }) {
   const [apiKeys, setApiKeys] = useState([])
@@ -11,11 +13,44 @@ function Configuracoes({ setIsAuthenticated }) {
   const [novaChaveCompleta, setNovaChaveCompleta] = useState(null)
   const [erro, setErro] = useState('')
   const [sucesso, setSucesso] = useState('')
+  const [emailNotificacoesAtivadas, setEmailNotificacoesAtivadas] = useState(true)
+  const [loadingEmailNotif, setLoadingEmailNotif] = useState(false)
+  const [showN8nInstructions, setShowN8nInstructions] = useState(false)
   const navigate = useNavigate()
+  const { toggleTheme, isDark } = useTheme()
+  const { notificationsEnabled, toggleNotifications } = useNotification()
 
   useEffect(() => {
     carregarApiKeys()
+    carregarPreferenciasEmail()
   }, [])
+  
+  const carregarPreferenciasEmail = async () => {
+    try {
+      const response = await api.get('/usuarios/perfil')
+      if (response.data.emailNotificacoesAtivadas !== undefined) {
+        setEmailNotificacoesAtivadas(response.data.emailNotificacoesAtivadas)
+      }
+    } catch (error) {
+      console.error('Erro ao carregar preferências de email:', error)
+    }
+  }
+  
+  const handleToggleEmailNotificacoes = async () => {
+    const novoValor = !emailNotificacoesAtivadas
+    setLoadingEmailNotif(true)
+    try {
+      await api.put('/usuarios/perfil/email-notificacoes', novoValor)
+      setEmailNotificacoesAtivadas(novoValor)
+      setSucesso(`Notificações por email ${novoValor ? 'ativadas' : 'desativadas'} com sucesso!`)
+      setTimeout(() => setSucesso(''), 3000)
+    } catch (error) {
+      setErro('Erro ao atualizar preferências de email')
+      setTimeout(() => setErro(''), 3000)
+    } finally {
+      setLoadingEmailNotif(false)
+    }
+  }
 
   const carregarApiKeys = async () => {
     try {
@@ -127,11 +162,12 @@ function Configuracoes({ setIsAuthenticated }) {
               <button
                 onClick={() => navigate('/dashboard')}
                 className="text-white hover:text-red-600 transition-colors"
+                aria-label="Voltar"
               >
                 <FaArrowLeft className="text-2xl" />
               </button>
-              <FaKey className="text-red-600 text-3xl" />
-              <h1 className="text-3xl font-bold text-white">Configurações - API Keys</h1>
+              <FaCog className="text-red-600 text-3xl" />
+              <h1 className="text-3xl font-bold text-white">Configurações</h1>
             </div>
           </div>
         </div>
@@ -151,6 +187,95 @@ function Configuracoes({ setIsAuthenticated }) {
             <span>{sucesso}</span>
           </div>
         )}
+
+        {/* Configurações Gerais */}
+        <div className="bg-gray-900 rounded-lg p-6 mb-6 border border-gray-700">
+          <h3 className="text-xl font-bold text-white mb-6">Configurações Gerais</h3>
+          
+          <div className="space-y-6">
+            {/* Tema */}
+            <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
+              <div className="flex items-center space-x-3">
+                {isDark ? (
+                  <FaMoon className="text-red-600 text-xl" />
+                ) : (
+                  <FaSun className="text-yellow-500 text-xl" />
+                )}
+                <div>
+                  <h4 className="text-white font-semibold">Tema</h4>
+                  <p className="text-gray-400 text-sm">Escolha entre tema claro ou escuro</p>
+                </div>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isDark}
+                  onChange={toggleTheme}
+                  className="sr-only peer"
+                />
+                <div className="w-14 h-7 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-red-600"></div>
+                <span className="ml-3 text-sm font-medium text-gray-300">
+                  {isDark ? 'Escuro' : 'Claro'}
+                </span>
+              </label>
+            </div>
+
+            {/* Notificações */}
+            <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
+              <div className="flex items-center space-x-3">
+                {notificationsEnabled ? (
+                  <FaBell className="text-red-600 text-xl" />
+                ) : (
+                  <FaBellSlash className="text-gray-500 text-xl" />
+                )}
+                <div>
+                  <h4 className="text-white font-semibold">Notificações</h4>
+                  <p className="text-gray-400 text-sm">Ative ou desative as notificações do sistema</p>
+                </div>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={notificationsEnabled}
+                  onChange={toggleNotifications}
+                  className="sr-only peer"
+                />
+                <div className="w-14 h-7 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-red-600"></div>
+                <span className="ml-3 text-sm font-medium text-gray-300">
+                  {notificationsEnabled ? 'Ativadas' : 'Desativadas'}
+                </span>
+              </label>
+            </div>
+
+            {/* Notificações por Email */}
+            <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
+              <div className="flex items-center space-x-3">
+                {emailNotificacoesAtivadas ? (
+                  <FaEnvelope className="text-red-600 text-xl" />
+                ) : (
+                  <FaEnvelopeOpen className="text-gray-500 text-xl" />
+                )}
+                <div>
+                  <h4 className="text-white font-semibold">Notificações por Email</h4>
+                  <p className="text-gray-400 text-sm">Receba emails quando novos carros forem cadastrados</p>
+                </div>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={emailNotificacoesAtivadas}
+                  onChange={handleToggleEmailNotificacoes}
+                  disabled={loadingEmailNotif}
+                  className="sr-only peer"
+                />
+                <div className={`w-14 h-7 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-red-600 ${loadingEmailNotif ? 'opacity-50 cursor-not-allowed' : ''}`}></div>
+                <span className="ml-3 text-sm font-medium text-gray-300">
+                  {emailNotificacoesAtivadas ? 'Ativadas' : 'Desativadas'}
+                </span>
+              </label>
+            </div>
+          </div>
+        </div>
 
         {/* Nova API Key - Modal */}
         {novaChaveCompleta && (
@@ -174,7 +299,7 @@ function Configuracoes({ setIsAuthenticated }) {
               <code className="text-green-400 font-mono text-sm break-all">{novaChaveCompleta}</code>
               <button
                 onClick={() => copiarChave(novaChaveCompleta)}
-                className="ml-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 flex items-center space-x-2"
+                className="btn-primary ml-4 flex items-center space-x-2"
               >
                 <FaCopy />
                 <span>Copiar</span>
@@ -203,7 +328,7 @@ function Configuracoes({ setIsAuthenticated }) {
                 setErro('')
                 setSucesso('')
               }}
-              className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 flex items-center space-x-2 transition-colors"
+              className="btn-primary flex items-center space-x-2"
             >
               <FaPlus />
               <span>{showForm ? 'Cancelar' : 'Nova API Key'}</span>
@@ -221,12 +346,12 @@ function Configuracoes({ setIsAuthenticated }) {
                   value={novaChaveNome}
                   onChange={(e) => setNovaChaveNome(e.target.value)}
                   placeholder="Ex: Integração n8n"
-                  className="w-full bg-gray-800 text-white px-4 py-2 rounded-md border border-gray-700 focus:outline-none focus:ring-2 focus:ring-red-600"
+                  className="input-enhanced w-full text-white"
                 />
               </div>
               <button
                 type="submit"
-                className="w-full bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+                className="btn-primary w-full"
               >
                 Criar API Key
               </button>
@@ -239,10 +364,14 @@ function Configuracoes({ setIsAuthenticated }) {
           <h3 className="text-xl font-bold text-white mb-4">Suas API Keys</h3>
           
           {apiKeys.length === 0 ? (
-            <div className="text-center text-gray-400 py-8">
-              <FaKey className="text-4xl mx-auto mb-4 opacity-50" />
-              <p>Nenhuma API Key criada ainda.</p>
-              <p className="text-sm mt-2">Crie uma para começar a integrar com n8n!</p>
+            <div className="empty-state py-8">
+              <div className="empty-state-icon" style={{ width: '80px', height: '80px' }}>
+                <FaKey className="text-4xl text-red-600" />
+              </div>
+              <h3 className="empty-state-title" style={{ fontSize: '20px' }}>Nenhuma API Key criada</h3>
+              <p className="empty-state-description" style={{ fontSize: '14px' }}>
+                Crie uma para começar a integrar com n8n!
+              </p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -310,21 +439,21 @@ function Configuracoes({ setIsAuthenticated }) {
                       {apiKey.ativa ? (
                         <button
                           onClick={() => handleDesativarApiKey(apiKey.id)}
-                          className="bg-yellow-600 text-white px-3 py-2 rounded text-sm hover:bg-yellow-700"
+                          className="btn-warning text-sm px-3 py-2"
                         >
                           Desativar
                         </button>
                       ) : (
                         <button
                           onClick={() => handleAtivarApiKey(apiKey.id)}
-                          className="bg-green-600 text-white px-3 py-2 rounded text-sm hover:bg-green-700"
+                          className="btn-success text-sm px-3 py-2"
                         >
                           Ativar
                         </button>
                       )}
                       <button
                         onClick={() => handleDeletarApiKey(apiKey.id)}
-                        className="bg-red-600 text-white px-3 py-2 rounded text-sm hover:bg-red-700 flex items-center justify-center space-x-1"
+                        className="btn-danger text-sm px-3 py-2 flex items-center justify-center space-x-1"
                       >
                         <FaTrash />
                         <span>Deletar</span>
@@ -337,16 +466,28 @@ function Configuracoes({ setIsAuthenticated }) {
           )}
         </div>
 
-        {/* Instruções */}
-        <div className="bg-gray-900 rounded-lg p-6 mt-6 border border-gray-700">
-          <h3 className="text-xl font-bold text-white mb-4">Como usar no n8n</h3>
-          <div className="space-y-3 text-gray-300">
-            <p>1. Crie uma API Key acima</p>
-            <p>2. No n8n, adicione um nó HTTP Request</p>
-            <p>3. Configure a URL: <code className="bg-black px-2 py-1 rounded">http://localhost:8080/api/public/carros</code></p>
-            <p>4. Adicione o header: <code className="bg-black px-2 py-1 rounded">X-API-Key: sua_chave_aqui</code></p>
-            <p>5. Execute o workflow!</p>
-          </div>
+        {/* Instruções n8n - Dropdown */}
+        <div className="bg-gray-900 rounded-lg mt-6 border border-gray-700 overflow-hidden">
+          <button
+            onClick={() => setShowN8nInstructions(!showN8nInstructions)}
+            className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-800 transition-colors"
+          >
+            <h3 className="text-xl font-bold text-white">n8n</h3>
+            {showN8nInstructions ? (
+              <FaChevronUp className="text-gray-400" />
+            ) : (
+              <FaChevronDown className="text-gray-400" />
+            )}
+          </button>
+          {showN8nInstructions && (
+            <div className="px-4 pb-4 space-y-3 text-gray-300">
+              <p>1. Crie uma API Key acima</p>
+              <p>2. No n8n, adicione um nó HTTP Request</p>
+              <p>3. Configure a URL: <code className="bg-black px-2 py-1 rounded">http://localhost:8080/api/public/carros</code></p>
+              <p>4. Adicione o header: <code className="bg-black px-2 py-1 rounded">X-API-Key: sua_chave_aqui</code></p>
+              <p>5. Execute o workflow!</p>
+            </div>
+          )}
         </div>
       </main>
     </div>

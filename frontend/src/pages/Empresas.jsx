@@ -5,6 +5,7 @@ import Header from '../components/Header'
 import { FaBuilding, FaPlus, FaUser, FaEdit, FaTrash, FaTimes, FaUsers, FaShieldAlt, FaUserShield, FaUserCheck, FaUserTimes, FaChevronDown, FaChevronUp, FaCar, FaSignOutAlt } from 'react-icons/fa'
 import { removeToken, getUserRole } from '../utils/auth'
 import { canCreateEmpresa, canEditEmpresa, canDeleteEmpresa, canManageUsuarios } from '../utils/permissions'
+import { useNotification } from '../contexts/NotificationContext'
 
 function Empresas({ setIsAuthenticated }) {
   const [empresas, setEmpresas] = useState([])
@@ -18,6 +19,7 @@ function Empresas({ setIsAuthenticated }) {
   const [empresaSelecionada, setEmpresaSelecionada] = useState(null)
   const [userRole, setUserRole] = useState(null)
   const navigate = useNavigate()
+  const { confirm, success, error } = useNotification()
 
   useEffect(() => {
     const role = getUserRole()
@@ -69,27 +71,39 @@ function Empresas({ setIsAuthenticated }) {
   }
 
   const handleDeletarEmpresa = async (id) => {
-    if (window.confirm('Tem certeza que deseja desativar esta empresa?')) {
+    const confirmed = await confirm({
+      title: 'Desativar Empresa',
+      message: 'Tem certeza que deseja desativar esta empresa?'
+    })
+
+    if (confirmed) {
       try {
         await api.delete(`/empresas/${id}`)
         carregarEmpresas()
-      } catch (error) {
-        console.error('Erro ao deletar empresa:', error)
-        alert('Erro ao deletar empresa')
+        success('Empresa desativada', 'A empresa foi desativada com sucesso')
+      } catch (err) {
+        console.error('Erro ao desativar empresa:', err)
+        const errorMessage = err.response?.data || err.message || 'Erro ao desativar empresa'
+        error('Erro ao desativar empresa', typeof errorMessage === 'string' ? errorMessage : 'Erro ao desativar empresa')
       }
     }
   }
 
   const handleRemoverEmpresa = async (id, nome) => {
-    if (window.confirm(`Tem certeza que deseja REMOVER permanentemente a empresa "${nome}"?\n\nEsta ação não pode ser desfeita.\n\nIMPORTANTE: A empresa não pode ter carros ou usuários associados.`)) {
+    const confirmed = await confirm({
+      title: 'Remover Empresa',
+      message: `Tem certeza que deseja REMOVER permanentemente a empresa "${nome}"?\n\nEsta ação não pode ser desfeita.\n\nIMPORTANTE: A empresa não pode ter carros ou usuários associados.`
+    })
+
+    if (confirmed) {
       try {
         await api.delete(`/empresas/${id}/remover`)
         carregarEmpresas()
-        alert('Empresa removida com sucesso')
-      } catch (error) {
-        console.error('Erro ao remover empresa:', error)
-        const errorMessage = error.response?.data || error.message || 'Erro ao remover empresa'
-        alert(typeof errorMessage === 'string' ? errorMessage : 'Erro ao remover empresa')
+        success('Empresa removida', 'A empresa foi removida permanentemente do sistema')
+      } catch (err) {
+        console.error('Erro ao remover empresa:', err)
+        const errorMessage = err.response?.data || err.message || 'Erro ao remover empresa'
+        error('Erro ao remover empresa', typeof errorMessage === 'string' ? errorMessage : 'Erro ao remover empresa')
       }
     }
   }
@@ -138,15 +152,24 @@ function Empresas({ setIsAuthenticated }) {
     }
   }
 
-  const handleAtivarDesativar = async (usuarioId, ativo) => {
-    try {
-      await api.put(`/usuarios/${usuarioId}/ativo`, !ativo)
-      if (empresaExpandida) {
-        carregarUsuariosEmpresa(empresaExpandida)
+  const handleRemoverUsuario = async (usuarioId, nome) => {
+    const confirmed = await confirm({
+      title: 'Remover Usuário',
+      message: `Tem certeza que deseja REMOVER permanentemente o usuário "${nome}"?\n\nEsta ação não pode ser desfeita e irá remover:\n- Todas as API Keys do usuário\n- Todos os relacionamentos com empresas\n- O usuário do sistema`
+    })
+
+    if (confirmed) {
+      try {
+        await api.delete(`/usuarios/${usuarioId}`)
+        if (empresaExpandida) {
+          carregarUsuariosEmpresa(empresaExpandida)
+        }
+        success('Usuário removido', 'O usuário foi removido permanentemente do sistema')
+      } catch (err) {
+        console.error('Erro ao remover usuário:', err)
+        const errorMessage = err.response?.data || err.message || 'Erro ao remover usuário'
+        error('Erro ao remover usuário', typeof errorMessage === 'string' ? errorMessage : 'Erro ao remover usuário')
       }
-    } catch (error) {
-      console.error('Erro ao alterar status:', error)
-      alert('Erro ao alterar status')
     }
   }
 
@@ -218,6 +241,8 @@ function Empresas({ setIsAuthenticated }) {
         title="Gerenciar Empresas"
         icon={FaBuilding}
         customButtons={customButtons}
+        showBackButton={true}
+        backTo="/dashboard"
       />
 
       {/* Main Content */}
@@ -225,14 +250,24 @@ function Empresas({ setIsAuthenticated }) {
         {loading ? (
           <div className="text-center text-white text-xl">Carregando empresas...</div>
         ) : empresas.length === 0 ? (
-          <div className="text-center text-white">
-            <p className="text-xl mb-4">Nenhuma empresa cadastrada ainda.</p>
-            <button
-              onClick={handleNovaEmpresa}
-              className="bg-red-600 text-white px-6 py-3 rounded-md hover:bg-red-700 transition-colors"
-            >
-              Cadastrar Primeira Empresa
-            </button>
+          <div className="empty-state">
+            <div className="empty-state-icon">
+              <FaBuilding className="text-6xl text-red-600" />
+            </div>
+            <h2 className="empty-state-title">Nenhuma empresa cadastrada</h2>
+            <p className="empty-state-description">
+              Comece cadastrando sua primeira empresa no sistema
+            </p>
+            <div className="empty-state-action">
+              {canCreateEmpresa(userRole) && (
+                <button
+                  onClick={handleNovaEmpresa}
+                  className="btn-primary"
+                >
+                  Cadastrar Primeira Empresa
+                </button>
+              )}
+            </div>
           </div>
         ) : (
           <div className="space-y-4">
@@ -244,7 +279,7 @@ function Empresas({ setIsAuthenticated }) {
                     <div className="flex flex-wrap items-center gap-2 mb-2">
                       <FaBuilding className="text-red-600 text-2xl" />
                       <h3 className="text-xl font-bold text-white">{empresa.nome}</h3>
-                      <span className={`px-2 py-1 rounded text-xs ${empresa.ativa ? 'bg-green-600' : 'bg-red-600'} text-white`}>
+                      <span className={`status-badge ${empresa.ativa ? 'active' : 'inactive'}`}>
                         {empresa.ativa ? 'Ativa' : 'Inativa'}
                       </span>
                     </div>
@@ -266,7 +301,7 @@ function Empresas({ setIsAuthenticated }) {
                       {canEditEmpresa(userRole) && (
                         <button
                           onClick={() => handleEditarEmpresa(empresa)}
-                          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center justify-center space-x-2 transition-colors"
+                          className="btn-edit flex items-center justify-center space-x-2"
                         >
                           <FaEdit />
                           <span>Editar</span>
@@ -276,14 +311,14 @@ function Empresas({ setIsAuthenticated }) {
                         <>
                           <button
                             onClick={() => handleDeletarEmpresa(empresa.id)}
-                            className="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 flex items-center justify-center space-x-2 transition-colors"
+                            className="btn-warning flex items-center justify-center space-x-2"
                           >
-                            <FaTrash />
+                            <FaUserTimes />
                             <span>Desativar</span>
                           </button>
                           <button
                             onClick={() => handleRemoverEmpresa(empresa.id, empresa.nome)}
-                            className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 flex items-center justify-center space-x-2 transition-colors"
+                            className="btn-danger flex items-center justify-center space-x-2"
                           >
                             <FaTrash />
                             <span>Remover</span>
@@ -297,7 +332,7 @@ function Empresas({ setIsAuthenticated }) {
                 {/* Botão para expandir/colapsar usuários */}
                 <button
                   onClick={() => handleExpandirEmpresa(empresa.id)}
-                  className="w-full bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-700 flex items-center justify-between transition-colors"
+                  className="btn-secondary w-full flex items-center justify-between"
                 >
                   <div className="flex items-center space-x-2">
                     <FaUsers className="text-red-600" />
@@ -317,7 +352,7 @@ function Empresas({ setIsAuthenticated }) {
                       {canManageUsuarios(userRole) && (
                         <button
                           onClick={() => handleNovoUsuario(empresa.id)}
-                          className="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 flex items-center space-x-2 text-sm"
+                          className="btn-primary flex items-center space-x-2 text-sm px-3 py-1"
                         >
                           <FaPlus />
                           <span>Novo Usuário</span>
@@ -337,9 +372,22 @@ function Empresas({ setIsAuthenticated }) {
                                 </div>
                                 <p className="text-gray-400 text-sm">{usuario.email}</p>
                               </div>
-                              <span className={`px-2 py-1 rounded text-xs ${usuario.ativo ? 'bg-green-600' : 'bg-red-600'} text-white`}>
-                                {usuario.ativo ? 'Ativo' : 'Inativo'}
-                              </span>
+                              <div className="flex items-center gap-2 ml-4">
+                                <span className={`status-badge ${usuario.ativo ? 'active' : 'inactive'} whitespace-nowrap`}>
+                                  {usuario.ativo ? 'Ativo' : 'Inativo'}
+                                </span>
+                                {canManageUsuarios(userRole) && (
+                                  <button
+                                    onClick={() => handleRemoverUsuario(usuario.id, usuario.nome)}
+                                    className="btn-icon btn-icon-danger"
+                                    type="button"
+                                    title="Remover usuário permanentemente"
+                                    aria-label="Remover usuário"
+                                  >
+                                    <FaTrash className="text-sm" />
+                                  </button>
+                                )}
+                              </div>
                             </div>
                             
                             <div className="mb-3">
@@ -359,14 +407,6 @@ function Empresas({ setIsAuthenticated }) {
                                   <option value="OPERADOR">Operador</option>
                                   <option value="VISUALIZADOR">Visualizador</option>
                                 </select>
-                                <button
-                                  onClick={() => handleAtivarDesativar(usuario.id, usuario.ativo)}
-                                  className={`w-full px-3 py-2 rounded-md text-white text-sm ${
-                                    usuario.ativo ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-green-600 hover:bg-green-700'
-                                  }`}
-                                >
-                                  {usuario.ativo ? <><FaUserTimes className="inline mr-1" />Desativar</> : <><FaUserCheck className="inline mr-1" />Ativar</>}
-                                </button>
                               </div>
                             )}
                           </div>
@@ -379,7 +419,7 @@ function Empresas({ setIsAuthenticated }) {
                         {canManageUsuarios(userRole) && (
                           <button
                             onClick={() => handleNovoUsuario(empresa.id)}
-                            className="mt-4 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+                            className="btn-primary mt-4"
                           >
                             Cadastrar Primeiro Usuário
                           </button>
@@ -460,8 +500,8 @@ function EmpresaForm({ empresa, onClose, onSuccess }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-      <div className="bg-gray-900 rounded-lg p-6 w-full max-w-md">
+    <div className="fixed inset-0 modal-overlay flex items-center justify-center z-50" onClick={onClose}>
+      <div className="modal-content bg-gray-900 rounded-lg p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold text-white flex items-center space-x-2">
             <FaBuilding className="text-red-600" />
@@ -480,7 +520,7 @@ function EmpresaForm({ empresa, onClose, onSuccess }) {
               value={formData.nome}
               onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
               required
-              className="flex-1 bg-gray-800 text-white px-4 py-2 rounded-md"
+              className="input-enhanced flex-1 text-white"
             />
           </div>
           <input
@@ -497,7 +537,7 @@ function EmpresaForm({ empresa, onClose, onSuccess }) {
               placeholder="Email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="flex-1 bg-gray-800 text-white px-4 py-2 rounded-md"
+              className="input-enhanced flex-1 text-white"
             />
           </div>
           <input
@@ -528,14 +568,14 @@ function EmpresaForm({ empresa, onClose, onSuccess }) {
           <div className="flex space-x-2">
             <button
               type="submit"
-              className="flex-1 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+              className="btn-primary flex-1"
             >
               Salvar
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+              className="btn-secondary flex-1"
             >
               Cancelar
             </button>
@@ -611,8 +651,8 @@ function UsuarioForm({ usuario, empresaId, onClose, onSuccess }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-      <div className="bg-gray-900 rounded-lg p-6 w-full max-w-md">
+    <div className="fixed inset-0 modal-overlay flex items-center justify-center z-50" onClick={onClose}>
+      <div className="modal-content bg-gray-900 rounded-lg p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold text-white flex items-center space-x-2">
             <FaUsers className="text-red-600" />
@@ -656,7 +696,7 @@ function UsuarioForm({ usuario, empresaId, onClose, onSuccess }) {
                 value={formData.senha}
                 onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
                 required
-                className="flex-1 bg-gray-800 text-white px-4 py-2 rounded-md"
+                className="input-enhanced flex-1 text-white"
               />
             </div>
           )}
@@ -665,7 +705,7 @@ function UsuarioForm({ usuario, empresaId, onClose, onSuccess }) {
             <select
               value={formData.role}
               onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-              className="flex-1 bg-gray-800 text-white px-4 py-2 rounded-md"
+              className="input-enhanced flex-1 text-white"
             >
               <option value="ADMIN">Administrador</option>
               <option value="OPERADOR">Operador</option>
@@ -675,14 +715,14 @@ function UsuarioForm({ usuario, empresaId, onClose, onSuccess }) {
           <div className="flex space-x-2">
             <button
               type="submit"
-              className="flex-1 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+              className="btn-primary flex-1"
             >
               Salvar
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+              className="btn-secondary flex-1"
             >
               Cancelar
             </button>

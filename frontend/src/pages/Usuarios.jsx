@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import Header from '../components/Header'
-import { FaUsers, FaPlus, FaUser, FaSearch, FaEdit, FaTrash, FaTimes, FaBuilding, FaCar, FaSignOutAlt } from 'react-icons/fa'
+import { FaUsers, FaPlus, FaUser, FaSearch, FaEdit, FaTrash, FaTimes, FaBuilding, FaCar, FaSignOutAlt, FaUpload, FaImage } from 'react-icons/fa'
 import { removeToken } from '../utils/auth'
+import { useNotification } from '../contexts/NotificationContext'
 
 function Usuarios({ setIsAuthenticated }) {
   const [usuarios, setUsuarios] = useState([])
@@ -15,7 +16,6 @@ function Usuarios({ setIsAuthenticated }) {
   const [filtros, setFiltros] = useState({
     nome: '',
     email: '',
-    empresaId: null,
     role: null,
     ativo: null,
     ordenarPor: 'nome',
@@ -25,6 +25,7 @@ function Usuarios({ setIsAuthenticated }) {
   })
   const [totalPages, setTotalPages] = useState(0)
   const navigate = useNavigate()
+  const { confirm, success, error } = useNotification()
 
   useEffect(() => {
     carregarUsuarios()
@@ -33,8 +34,9 @@ function Usuarios({ setIsAuthenticated }) {
 
   const carregarUsuarios = async () => {
     try {
-      const response = await api.get('/usuarios/todos?pagina=0&tamanho=100')
-      setUsuarios(response.data.content || [])
+      // Carregar apenas usuários da própria empresa
+      const response = await api.get('/usuarios/empresa')
+      setUsuarios(response.data || [])
       setLoading(false)
     } catch (error) {
       console.error('Erro ao carregar usuários:', error)
@@ -54,9 +56,45 @@ function Usuarios({ setIsAuthenticated }) {
   const buscarComFiltros = async () => {
     try {
       setLoading(true)
-      const response = await api.post('/usuarios/buscar', filtros)
-      setUsuarios(response.data.content || [])
-      setTotalPages(response.data.totalPages || 0)
+      // Primeiro carregar todos os usuários da empresa
+      const response = await api.get('/usuarios/empresa')
+      let usuariosFiltrados = response.data || []
+      
+      // Aplicar filtros localmente (exceto empresaId, pois já está filtrado)
+      if (filtros.nome && filtros.nome.trim() !== '') {
+        usuariosFiltrados = usuariosFiltrados.filter(u => 
+          u.nome.toLowerCase().includes(filtros.nome.toLowerCase())
+        )
+      }
+      if (filtros.email && filtros.email.trim() !== '') {
+        usuariosFiltrados = usuariosFiltrados.filter(u => 
+          u.email.toLowerCase().includes(filtros.email.toLowerCase())
+        )
+      }
+      if (filtros.role) {
+        usuariosFiltrados = usuariosFiltrados.filter(u => u.role === filtros.role)
+      }
+      if (filtros.ativo !== null) {
+        usuariosFiltrados = usuariosFiltrados.filter(u => u.ativo === filtros.ativo)
+      }
+      
+      // Ordenação
+      usuariosFiltrados.sort((a, b) => {
+        const campo = filtros.ordenarPor || 'nome'
+        const direcao = filtros.direcao || 'ASC'
+        let resultado = 0
+        
+        if (campo === 'nome') {
+          resultado = a.nome.localeCompare(b.nome)
+        } else if (campo === 'email') {
+          resultado = a.email.localeCompare(b.email)
+        }
+        
+        return direcao === 'DESC' ? -resultado : resultado
+      })
+      
+      setUsuarios(usuariosFiltrados)
+      setTotalPages(1)
       setLoading(false)
     } catch (error) {
       console.error('Erro ao buscar usuários:', error)
@@ -97,15 +135,20 @@ function Usuarios({ setIsAuthenticated }) {
   }
 
   const handleRemoverUsuario = async (usuarioId, nome) => {
-    if (window.confirm(`Tem certeza que deseja REMOVER permanentemente o usuário "${nome}"?\n\nEsta ação não pode ser desfeita e irá remover:\n- Todas as API Keys do usuário\n- Todos os relacionamentos com empresas\n- O usuário do sistema`)) {
+    const confirmed = await confirm({
+      title: 'Remover Usuário',
+      message: `Tem certeza que deseja REMOVER permanentemente o usuário "${nome}"?\n\nEsta ação não pode ser desfeita e irá remover:\n- Todas as API Keys do usuário\n- Todos os relacionamentos com empresas\n- O usuário do sistema`
+    })
+
+    if (confirmed) {
       try {
         await api.delete(`/usuarios/${usuarioId}`)
         carregarUsuarios()
-        alert('Usuário removido com sucesso')
-      } catch (error) {
-        console.error('Erro ao remover usuário:', error)
-        const errorMessage = error.response?.data || error.message || 'Erro ao remover usuário'
-        alert(typeof errorMessage === 'string' ? errorMessage : 'Erro ao remover usuário')
+        success('Usuário removido', 'O usuário foi removido permanentemente do sistema')
+      } catch (err) {
+        console.error('Erro ao remover usuário:', err)
+        const errorMessage = err.response?.data || err.message || 'Erro ao remover usuário'
+        error('Erro ao remover usuário', typeof errorMessage === 'string' ? errorMessage : 'Erro ao remover usuário')
       }
     }
   }
@@ -118,7 +161,6 @@ function Usuarios({ setIsAuthenticated }) {
     setFiltros({
       nome: '',
       email: '',
-      empresaId: null,
       role: null,
       ativo: null,
       ordenarPor: 'nome',
@@ -160,7 +202,7 @@ function Usuarios({ setIsAuthenticated }) {
       </button>
       <button
         onClick={handleNovoUsuario}
-        className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 flex items-center space-x-2 transition-colors text-sm md:text-base w-full md:w-auto justify-center"
+        className="btn-primary flex items-center space-x-2 text-sm md:text-base w-full md:w-auto justify-center"
       >
         <FaPlus />
         <span>Novo Usuário</span>
@@ -189,6 +231,8 @@ function Usuarios({ setIsAuthenticated }) {
         title="Gerenciar Usuários"
         icon={FaUsers}
         customButtons={customButtons}
+        showBackButton={true}
+        backTo="/dashboard"
       />
 
       {/* Main Content */}
@@ -197,7 +241,7 @@ function Usuarios({ setIsAuthenticated }) {
         <div className="mb-6">
           <button
             onClick={() => setShowFiltros(!showFiltros)}
-            className="bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-700 flex items-center space-x-2 mb-4"
+            className="btn-secondary flex items-center space-x-2 mb-4"
           >
             <FaSearch />
             <span>{showFiltros ? 'Ocultar' : 'Mostrar'} Filtros</span>
@@ -211,29 +255,19 @@ function Usuarios({ setIsAuthenticated }) {
                   placeholder="Nome"
                   value={filtros.nome}
                   onChange={(e) => handleFiltroChange('nome', e.target.value)}
-                  className="bg-gray-800 text-white px-4 py-2 rounded-md"
+                  className="input-enhanced text-white"
                 />
                 <input
                   type="text"
                   placeholder="Email"
                   value={filtros.email}
                   onChange={(e) => handleFiltroChange('email', e.target.value)}
-                  className="bg-gray-800 text-white px-4 py-2 rounded-md"
+                  className="input-enhanced text-white"
                 />
-                <select
-                  value={filtros.empresaId || ''}
-                  onChange={(e) => handleFiltroChange('empresaId', e.target.value ? parseInt(e.target.value) : null)}
-                  className="bg-gray-800 text-white px-4 py-2 rounded-md"
-                >
-                  <option value="">Todas as Empresas</option>
-                  {empresas.map(empresa => (
-                    <option key={empresa.id} value={empresa.id}>{empresa.nome}</option>
-                  ))}
-                </select>
                 <select
                   value={filtros.role || ''}
                   onChange={(e) => handleFiltroChange('role', e.target.value || null)}
-                  className="bg-gray-800 text-white px-4 py-2 rounded-md"
+                  className="input-enhanced text-white"
                 >
                   <option value="">Todos os Perfis</option>
                   <option value="ADMIN">Administrador</option>
@@ -243,7 +277,7 @@ function Usuarios({ setIsAuthenticated }) {
                 <select
                   value={filtros.ativo === null ? '' : filtros.ativo}
                   onChange={(e) => handleFiltroChange('ativo', e.target.value === '' ? null : e.target.value === 'true')}
-                  className="bg-gray-800 text-white px-4 py-2 rounded-md"
+                  className="input-enhanced text-white"
                 >
                   <option value="">Todos</option>
                   <option value="true">Ativos</option>
@@ -252,7 +286,7 @@ function Usuarios({ setIsAuthenticated }) {
                 <select
                   value={filtros.ordenarPor}
                   onChange={(e) => handleFiltroChange('ordenarPor', e.target.value)}
-                  className="bg-gray-800 text-white px-4 py-2 rounded-md"
+                  className="input-enhanced text-white"
                 >
                   <option value="nome">Nome</option>
                   <option value="email">Email</option>
@@ -260,22 +294,22 @@ function Usuarios({ setIsAuthenticated }) {
                 <select
                   value={filtros.direcao}
                   onChange={(e) => handleFiltroChange('direcao', e.target.value)}
-                  className="bg-gray-800 text-white px-4 py-2 rounded-md"
+                  className="input-enhanced text-white"
                 >
                   <option value="ASC">Crescente</option>
                   <option value="DESC">Decrescente</option>
                 </select>
               </div>
-              <div className="flex space-x-2">
+              <div className="flex space-x-3">
                 <button
                   onClick={buscarComFiltros}
-                  className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+                  className="btn-primary"
                 >
                   Buscar
                 </button>
                 <button
                   onClick={limparFiltros}
-                  className="bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                  className="btn-secondary"
                 >
                   Limpar
                 </button>
@@ -287,62 +321,100 @@ function Usuarios({ setIsAuthenticated }) {
         {loading ? (
           <div className="text-center text-white text-xl">Carregando usuários...</div>
         ) : usuarios.length === 0 ? (
-          <div className="text-center text-white">
-            <p className="text-xl mb-4">Nenhum usuário cadastrado ainda.</p>
-            <button
-              onClick={handleNovoUsuario}
-              className="bg-red-600 text-white px-6 py-3 rounded-md hover:bg-red-700 transition-colors"
-            >
-              Cadastrar Primeiro Usuário
-            </button>
+          <div className="empty-state">
+            <div className="empty-state-icon">
+              <FaUsers className="text-6xl text-red-600" />
+            </div>
+            <h2 className="empty-state-title">Nenhum usuário cadastrado</h2>
+            <p className="empty-state-description">
+              Comece cadastrando seu primeiro usuário no sistema
+            </p>
+            <div className="empty-state-action">
+              <button
+                onClick={handleNovoUsuario}
+                className="btn-primary"
+              >
+                Cadastrar Primeiro Usuário
+              </button>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {usuarios.map((usuario) => (
-              <div key={usuario.id} className="bg-gray-900 rounded-lg p-6 border border-gray-800">
+            {usuarios.map((usuario, index) => {
+              const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
+              const fotoUrl = usuario.foto 
+                ? (usuario.foto.startsWith('http') 
+                    ? usuario.foto 
+                    : `${apiBaseUrl.replace('/api', '')}${usuario.foto}`)
+                : null
+              
+              return (
+              <div key={usuario.id} className="stagger-animation bg-gray-900 rounded-lg p-6 border border-gray-800" style={{ animationDelay: `${index * 0.05}s` }}>
+                {/* Header do Card - Foto, Nome, Email, Status e Botão Remover */}
                 <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-xl font-bold text-white">{usuario.nome}</h3>
-                    <p className="text-gray-400 text-sm">{usuario.email}</p>
+                  <div className="flex items-center space-x-3 flex-1">
+                    {fotoUrl ? (
+                      <img
+                        src={fotoUrl}
+                        alt={usuario.nome}
+                        className="w-12 h-12 rounded-full object-cover border-2 border-red-600"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center border-2 border-gray-600">
+                        <FaUser className="text-gray-400 text-xl" />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold text-white mb-1">{usuario.nome}</h3>
+                      <p className="text-gray-400 text-sm">{usuario.email}</p>
+                    </div>
                   </div>
-                  <span className={`px-2 py-1 rounded text-xs ${usuario.ativo ? 'bg-green-600' : 'bg-red-600'} text-white`}>
-                    {usuario.ativo ? 'Ativo' : 'Inativo'}
-                  </span>
+              <div className="flex items-center gap-2 ml-4">
+                <span className={`status-badge ${usuario.ativo ? 'active' : 'inactive'} whitespace-nowrap`}>
+                  {usuario.ativo ? 'Ativo' : 'Inativo'}
+                </span>
+               <button
+                 onClick={() => handleRemoverUsuario(usuario.id, usuario.nome)}
+                 className="btn-icon btn-icon-danger pulse-on-hover"
+                 type="button"
+                 data-tooltip="Remover usuário permanentemente"
+                 aria-label="Remover usuário"
+               >
+                 <FaTrash className="text-sm" />
+               </button>
+                  </div>
                 </div>
-                <div className="space-y-2 text-gray-300 mb-4">
+
+                {/* Informações do Usuário */}
+                <div className="space-y-3 mb-4">
                   <div className="flex items-center space-x-2">
-                    <span className={`px-2 py-1 rounded text-xs ${getRoleColor(usuario.role)} text-white`}>
+                    <span className={`px-3 py-1 rounded-md text-xs font-medium ${getRoleColor(usuario.role)} text-white`}>
                       {usuario.roleDescricao || usuario.role}
                     </span>
                   </div>
                   {usuario.empresaNome && (
-                    <p className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 text-gray-300">
                       <FaBuilding className="text-gray-400" />
-                      <span>{usuario.empresaNome}</span>
-                    </p>
+                      <span className="text-sm">{usuario.empresaNome}</span>
+                    </div>
                   )}
                 </div>
-                <div className="space-y-2">
+
+                {/* Select para alterar Role */}
+                <div className="mt-4">
                   <select
                     value={usuario.role}
                     onChange={(e) => handleAlterarRole(usuario.id, e.target.value)}
-                    className="w-full bg-gray-800 text-white px-4 py-2 rounded-md"
+                    className="w-full bg-gray-800 text-white px-4 py-2 rounded-md border border-gray-700 hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-600 transition-colors"
                   >
                     <option value="ADMIN">Administrador</option>
                     <option value="OPERADOR">Operador</option>
                     <option value="VISUALIZADOR">Visualizador</option>
                   </select>
-                  <button
-                    onClick={() => handleRemoverUsuario(usuario.id, usuario.nome)}
-                    className="w-full px-4 py-2 rounded-md text-white bg-red-600 hover:bg-red-700 flex items-center justify-center space-x-2 transition-colors"
-                    type="button"
-                  >
-                    <FaTrash />
-                    <span>Remover</span>
-                  </button>
                 </div>
               </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </main>
@@ -368,6 +440,8 @@ function UsuarioForm({ usuario, empresas, onClose, onSuccess }) {
     role: 'OPERADOR',
     empresaId: empresas.length > 0 ? empresas[0].id : null
   })
+  const [foto, setFoto] = useState(null)
+  const [fotoPreview, setFotoPreview] = useState(null)
 
   useEffect(() => {
     if (usuario) {
@@ -378,19 +452,71 @@ function UsuarioForm({ usuario, empresas, onClose, onSuccess }) {
         role: usuario.role || 'OPERADOR',
         empresaId: usuario.empresaId || null
       })
+      // Se o usuário já tem foto, mostrar preview
+      if (usuario.foto) {
+        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
+        const fotoUrl = usuario.foto.startsWith('http') 
+          ? usuario.foto 
+          : `${apiBaseUrl.replace('/api', '')}${usuario.foto}`
+        setFotoPreview(fotoUrl)
+      } else {
+        setFotoPreview(null)
+      }
+    } else {
+      setFotoPreview(null)
+      setFoto(null)
     }
   }, [usuario, empresas])
+  
+  const handleFileChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      setFoto(file)
+      // Criar preview
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setFotoPreview(reader.result)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
+      const formDataToSend = new FormData()
+      
+      // Adicionar dados do usuário como JSON
+      const usuarioData = {
+        nome: formData.nome,
+        email: formData.email,
+        senha: formData.senha,
+        role: formData.role,
+        empresaId: empresas.length > 0 ? empresas[0].id : null
+      }
+      
+      formDataToSend.append('usuario', new Blob([JSON.stringify(usuarioData)], {
+        type: 'application/json'
+      }))
+      
+      // Adicionar foto se fornecida
+      if (foto) {
+        formDataToSend.append('foto', foto)
+      }
+      
       if (usuario) {
-        // Para edição, apenas atualizar role e empresa se necessário
-        if (formData.role !== usuario.role) {
-          await api.put(`/usuarios/${usuario.id}/role`, formData.role)
-        }
+        // Para edição, usar PUT com multipart
+        await api.put(`/usuarios/${usuario.id}`, formDataToSend, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
       } else {
-        await api.post('/usuarios', formData)
+        await api.post('/usuarios', formDataToSend, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
       }
       onSuccess()
       onClose()
@@ -401,8 +527,8 @@ function UsuarioForm({ usuario, empresas, onClose, onSuccess }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-      <div className="bg-gray-900 rounded-lg p-6 w-full max-w-md">
+    <div className="fixed inset-0 modal-overlay flex items-center justify-center z-50" onClick={onClose}>
+      <div className="modal-content bg-gray-900 rounded-lg p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold text-white">
             {usuario ? 'Editar Usuário' : 'Novo Usuário'}
@@ -449,29 +575,49 @@ function UsuarioForm({ usuario, empresas, onClose, onSuccess }) {
             <option value="OPERADOR">Operador</option>
             <option value="VISUALIZADOR">Visualizador</option>
           </select>
-          <select
-            value={formData.empresaId || ''}
-            onChange={(e) => setFormData({ ...formData, empresaId: e.target.value ? parseInt(e.target.value) : null })}
-            required
-            disabled={!!usuario}
-            className="w-full bg-gray-800 text-white px-4 py-2 rounded-md disabled:opacity-50"
-          >
-            <option value="">Selecione uma empresa</option>
-            {empresas.map(empresa => (
-              <option key={empresa.id} value={empresa.id}>{empresa.nome}</option>
-            ))}
-          </select>
+          
+          {/* Upload de Foto */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Foto do Usuário (opcional)
+            </label>
+            <div className="flex items-center space-x-4">
+              <label className="btn-primary flex items-center space-x-2 cursor-pointer">
+                <FaUpload />
+                <span>Selecionar Foto</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+              </label>
+              {foto && (
+                <span className="text-gray-400 text-sm">Foto selecionada</span>
+              )}
+            </div>
+            {fotoPreview && (
+              <div className="mt-4">
+                <img
+                  src={fotoPreview}
+                  alt="Preview"
+                  className="w-32 h-32 object-cover rounded-full border-2 border-red-600"
+                />
+              </div>
+            )}
+          </div>
+          
           <div className="flex space-x-2">
             <button
               type="submit"
-              className="flex-1 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+              className="btn-primary flex-1"
             >
               Salvar
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+              className="btn-secondary flex-1"
             >
               Cancelar
             </button>

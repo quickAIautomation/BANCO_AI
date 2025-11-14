@@ -45,6 +45,12 @@ public class Usuario {
     @Column(nullable = false)
     private Boolean ativo = true;
     
+    @Column(length = 500)
+    private String foto; // URL da foto do usuário (opcional)
+    
+    @Column(nullable = false)
+    private Boolean emailNotificacoesAtivadas = true; // Notificações por email ativadas por padrão
+    
     // Método de compatibilidade para manter isAdmin
     public Boolean getIsAdmin() {
         return role == Role.ADMIN;

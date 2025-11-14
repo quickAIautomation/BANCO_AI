@@ -6,6 +6,7 @@ import CarroCard from '../components/CarroCard'
 import CarroForm from '../components/CarroForm'
 import Header from '../components/Header'
 import { canCreateCarro, canEditCarro, canDeleteCarro, canManageEmpresas } from '../utils/permissions'
+import { useNotification } from '../contexts/NotificationContext'
 import { FaCar, FaSearch, FaTachometerAlt, FaCalendarAlt, FaFilter } from 'react-icons/fa'
 
 function Dashboard({ setIsAuthenticated }) {
@@ -25,7 +26,7 @@ function Dashboard({ setIsAuthenticated }) {
     valorMax: '',
     dataInicio: '',
     ordenarPor: 'dataCadastro',
-    direcao: 'DESC',
+    direcao: 'DESC', // Sempre decrescente
     pagina: 0,
     tamanho: 20
   })
@@ -34,6 +35,7 @@ function Dashboard({ setIsAuthenticated }) {
   const [empresaSelecionada, setEmpresaSelecionada] = useState(null)
   const [inicializado, setInicializado] = useState(false)
   const navigate = useNavigate()
+  const { success } = useNotification()
 
   useEffect(() => {
     const inicializar = async () => {
@@ -142,7 +144,7 @@ function Dashboard({ setIsAuthenticated }) {
         dataInicio: dataInicio,
         dataFim: dataFim,
         ordenarPor: filtros.ordenarPor || 'dataCadastro',
-        direcao: filtros.direcao || 'DESC',
+        direcao: 'DESC', // Sempre decrescente
         pagina: filtros.pagina || 0,
         tamanho: filtros.tamanho || 20
       }
@@ -194,7 +196,7 @@ function Dashboard({ setIsAuthenticated }) {
       valorMax: '',
       dataInicio: '',
       ordenarPor: 'dataCadastro',
-      direcao: 'DESC',
+      direcao: 'DESC', // Sempre decrescente
       pagina: 0,
       tamanho: 20
     })
@@ -217,8 +219,15 @@ function Dashboard({ setIsAuthenticated }) {
     setShowForm(true)
   }
 
-  const handleFormClose = () => {
+  const handleFormClose = (carroCriado = false) => {
     setShowForm(false)
+    if (carroCriado && !carroEditando) {
+      // Carro foi criado (não editado)
+      success('Carro cadastrado', 'O carro foi cadastrado com sucesso!')
+    } else if (carroCriado && carroEditando) {
+      // Carro foi editado
+      success('Carro atualizado', 'O carro foi atualizado com sucesso!')
+    }
     setCarroEditando(null)
     carregarCarros()
   }
@@ -259,18 +268,19 @@ function Dashboard({ setIsAuthenticated }) {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         {/* Filtros */}
-        <div className="mb-6">
+        <div className="mb-8 section-spacing">
           <button
             onClick={() => setShowFiltros(!showFiltros)}
-            className="bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-700 flex items-center space-x-2 mb-4"
+            className="btn-secondary flex items-center justify-center p-3 mb-4 pulse-on-hover"
+            data-tooltip="Filtros de busca"
+            aria-label="Mostrar/Ocultar filtros"
           >
-            <FaFilter />
-            <span>FILTRO</span>
+            <FaFilter className="text-xl" />
           </button>
 
           {showFiltros && (
-            <div className="bg-gray-900 p-4 rounded-md mb-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div className="glass-container p-4 mb-4 slide-up" style={{ zIndex: 40 }}>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
                 <div className="flex items-center space-x-2">
                   <FaCar className="text-gray-400" />
                   <input
@@ -278,7 +288,7 @@ function Dashboard({ setIsAuthenticated }) {
                     placeholder="Placa"
                     value={filtros.placa}
                     onChange={(e) => handleFiltroChange('placa', e.target.value)}
-                    className="flex-1 bg-gray-800 text-white px-4 py-2 rounded-md"
+                    className="input-enhanced flex-1 text-white"
                   />
                 </div>
                 <input
@@ -286,14 +296,14 @@ function Dashboard({ setIsAuthenticated }) {
                   placeholder="Modelo"
                   value={filtros.modelo}
                   onChange={(e) => handleFiltroChange('modelo', e.target.value)}
-                  className="bg-gray-800 text-white px-4 py-2 rounded-md"
+                  className="input-enhanced text-white"
                 />
                 <input
                   type="text"
                   placeholder="Marca"
                   value={filtros.marca}
                   onChange={(e) => handleFiltroChange('marca', e.target.value)}
-                  className="bg-gray-800 text-white px-4 py-2 rounded-md"
+                  className="input-enhanced text-white"
                 />
                 <div className="flex items-center space-x-2">
                   <FaTachometerAlt className="text-gray-400" />
@@ -302,7 +312,7 @@ function Dashboard({ setIsAuthenticated }) {
                     placeholder="Quilometragem Mínima"
                     value={filtros.quilometragemMin}
                     onChange={(e) => handleFiltroChange('quilometragemMin', e.target.value)}
-                    className="flex-1 bg-gray-800 text-white px-4 py-2 rounded-md"
+                    className="input-enhanced flex-1 text-white"
                   />
                 </div>
                 <div className="flex items-center space-x-2">
@@ -312,7 +322,7 @@ function Dashboard({ setIsAuthenticated }) {
                     placeholder="Quilometragem Máxima"
                     value={filtros.quilometragemMax}
                     onChange={(e) => handleFiltroChange('quilometragemMax', e.target.value)}
-                    className="flex-1 bg-gray-800 text-white px-4 py-2 rounded-md"
+                    className="input-enhanced flex-1 text-white"
                   />
                 </div>
                 <div className="flex items-center space-x-2">
@@ -324,7 +334,7 @@ function Dashboard({ setIsAuthenticated }) {
                     onChange={(e) => handleFiltroChange('valorMin', e.target.value)}
                     min="0"
                     step="0.01"
-                    className="flex-1 bg-gray-800 text-white px-4 py-2 rounded-md"
+                    className="input-enhanced flex-1 text-white"
                   />
                 </div>
                 <div className="flex items-center space-x-2">
@@ -336,7 +346,7 @@ function Dashboard({ setIsAuthenticated }) {
                     onChange={(e) => handleFiltroChange('valorMax', e.target.value)}
                     min="0"
                     step="0.01"
-                    className="flex-1 bg-gray-800 text-white px-4 py-2 rounded-md"
+                    className="input-enhanced flex-1 text-white"
                   />
                 </div>
                 <div className="flex items-center space-x-2">
@@ -346,42 +356,23 @@ function Dashboard({ setIsAuthenticated }) {
                     placeholder="Data de Cadastro"
                     value={filtros.dataInicio}
                     onChange={(e) => handleFiltroChange('dataInicio', e.target.value)}
-                    className="flex-1 bg-gray-800 text-white px-4 py-2 rounded-md"
+                    className="input-enhanced flex-1 text-white"
                   />
                 </div>
-                <select
-                  value={filtros.ordenarPor}
-                  onChange={(e) => handleFiltroChange('ordenarPor', e.target.value)}
-                  className="bg-gray-800 text-white px-4 py-2 rounded-md"
-                >
-                  <option value="quilometragem">Quilometragem</option>
-                  <option value="modelo">Modelo</option>
-                  <option value="marca">Marca</option>
-                  <option value="placa">Placa</option>
-                  <option value="valor">Valor</option>
-                </select>
-                <select
-                  value={filtros.direcao}
-                  onChange={(e) => handleFiltroChange('direcao', e.target.value)}
-                  className="bg-gray-800 text-white px-4 py-2 rounded-md"
-                >
-                  <option value="ASC">Crescente</option>
-                  <option value="DESC">Decrescente</option>
-                </select>
               </div>
               <div className="flex space-x-2">
                 <button
                   onClick={buscarComFiltros}
-                  className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 flex items-center space-x-2"
+                  className="btn-primary flex items-center space-x-2 text-sm px-4 py-2"
                 >
                   <FaSearch />
                   <span>Buscar</span>
                 </button>
                 <button
                   onClick={limparFiltros}
-                  className="bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                  className="btn-secondary text-sm px-4 py-2"
                 >
-                  Limpar Filtros
+                  Limpar
                 </button>
               </div>
             </div>
@@ -389,28 +380,47 @@ function Dashboard({ setIsAuthenticated }) {
         </div>
 
         {loading ? (
-          <div className="text-center text-white text-xl">Carregando carros...</div>
-        ) : carros.length === 0 ? (
-          <div className="text-center text-white">
-            <p className="text-xl mb-4">Nenhum carro encontrado.</p>
-            <button
-              onClick={handleNovoCarro}
-              className="bg-red-600 text-white px-6 py-3 rounded-md hover:bg-red-700 transition-colors"
-            >
-              Cadastrar Primeiro Carro
-            </button>
+          <div className="grid-enhanced grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="skeleton-card">
+                <div className="skeleton-line h-48 mb-4"></div>
+                <div className="skeleton-line mb-2"></div>
+                <div className="skeleton-line short mb-4"></div>
+                <div className="skeleton-line medium mb-2"></div>
+                <div className="skeleton-line short"></div>
+              </div>
+            ))}
           </div>
+               ) : carros.length === 0 ? (
+                 <div className="empty-state">
+                   <div className="empty-state-icon">
+                     <FaCar className="text-6xl text-red-600" />
+                   </div>
+                   <h2 className="empty-state-title">Nenhum carro encontrado</h2>
+                   <p className="empty-state-description">
+                     Comece cadastrando seu primeiro veículo no sistema
+                   </p>
+                   <div className="empty-state-action">
+                     <button
+                       onClick={handleNovoCarro}
+                       className="btn-primary"
+                     >
+                       Cadastrar Primeiro Carro
+                     </button>
+                   </div>
+                 </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {carros.map((carro) => (
-              <CarroCard
-                key={carro.id}
-                carro={carro}
-                onEdit={handleEditarCarro}
-                onDelete={handleDeletarCarro}
-                canEdit={canEditCarro(userRole)}
-                canDelete={canDeleteCarro(userRole)}
-              />
+          <div className="grid-enhanced grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            {carros.map((carro, index) => (
+              <div key={carro.id} className="stagger-animation" style={{ animationDelay: `${index * 0.05}s` }}>
+                <CarroCard
+                  carro={carro}
+                  onEdit={handleEditarCarro}
+                  onDelete={handleDeletarCarro}
+                  canEdit={canEditCarro(userRole)}
+                  canDelete={canDeleteCarro(userRole)}
+                />
+              </div>
             ))}
           </div>
         )}
