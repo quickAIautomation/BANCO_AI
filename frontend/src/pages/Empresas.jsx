@@ -363,23 +363,23 @@ function Empresas({ setIsAuthenticated }) {
                     {usuariosEmpresa[empresa.id] && usuariosEmpresa[empresa.id].length > 0 ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {usuariosEmpresa[empresa.id].map((usuario) => (
-                          <div key={usuario.id} className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                            <div className="flex justify-between items-start mb-3">
-                              <div className="flex-1">
+                          <div key={usuario.id} className="bg-gray-800 rounded-lg p-4 border border-gray-700 flex flex-col">
+                            <div className="flex justify-between items-start mb-3 flex-wrap gap-2">
+                              <div className="flex-1 min-w-0">
                                 <div className="flex items-center space-x-2 mb-1">
                                   {getRoleIcon(usuario.role)}
-                                  <h5 className="font-semibold text-white">{usuario.nome}</h5>
+                                  <h5 className="font-semibold text-white truncate">{usuario.nome}</h5>
                                 </div>
-                                <p className="text-gray-400 text-sm">{usuario.email}</p>
+                                <p className="text-gray-400 text-sm truncate">{usuario.email}</p>
                               </div>
-                              <div className="flex items-center gap-2 ml-4">
-                                <span className={`status-badge ${usuario.ativo ? 'active' : 'inactive'} whitespace-nowrap`}>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <span className={`status-badge ${usuario.ativo ? 'active' : 'inactive'} whitespace-nowrap text-xs`}>
                                   {usuario.ativo ? 'Ativo' : 'Inativo'}
                                 </span>
                                 {canManageUsuarios(userRole) && (
                                   <button
                                     onClick={() => handleRemoverUsuario(usuario.id, usuario.nome)}
-                                    className="btn-icon btn-icon-danger"
+                                    className="btn-icon btn-icon-danger flex-shrink-0"
                                     type="button"
                                     title="Remover usuário permanentemente"
                                     aria-label="Remover usuário"

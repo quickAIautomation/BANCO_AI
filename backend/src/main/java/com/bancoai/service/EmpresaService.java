@@ -190,11 +190,9 @@ public class EmpresaService {
             throw new RuntimeException("Não é possível remover a empresa. Existem " + usuariosComEmpresaPrincipal.size() + " usuário(s) com esta empresa como principal. Altere a empresa principal dos usuários primeiro.");
         }
         
-        // Remover relacionamentos Many-to-Many com usuários
-        empresa.getUsuarios().forEach(usuario -> {
-            usuario.getEmpresas().remove(empresa);
-            usuarioRepository.save(usuario);
-        });
+        // Remover relacionamentos Many-to-Many da tabela usuario_empresas
+        // Isso remove todos os registros da tabela de junção antes de deletar a empresa
+        empresaRepository.deletarRelacionamentosUsuarioEmpresa(id);
         
         // Remover a empresa
         empresaRepository.delete(empresa);

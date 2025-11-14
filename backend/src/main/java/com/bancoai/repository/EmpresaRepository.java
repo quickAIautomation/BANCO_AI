@@ -4,6 +4,7 @@ import com.bancoai.model.Empresa;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -61,5 +62,10 @@ public interface EmpresaRepository extends JpaRepository<Empresa, Long> {
                                               @Param("dataInicio") LocalDateTime dataInicio,
                                               @Param("dataFim") LocalDateTime dataFim,
                                               Pageable pageable);
+    
+    // Deletar relacionamentos Many-to-Many da tabela usuario_empresas
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(value = "DELETE FROM usuario_empresas WHERE empresa_id = :empresaId", nativeQuery = true)
+    void deletarRelacionamentosUsuarioEmpresa(@Param("empresaId") Long empresaId);
 }
 
