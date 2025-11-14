@@ -193,7 +193,7 @@ const NotificationContainer = () => {
   if (notifications.length === 0) return null
 
   return (
-    <div className="fixed top-4 right-4 z-50 space-y-2 max-w-md w-full">
+    <div className="fixed top-24 right-4 z-[10000] space-y-2 max-w-md w-full">
       {notifications.map((notification) => {
         if (notification.type === 'confirm') {
           return <ConfirmDialog key={notification.id} notification={notification} />
@@ -214,7 +214,7 @@ const NotificationContainer = () => {
 // Dialog de confirmação
 const ConfirmDialog = ({ notification }) => {
   return (
-    <div className="fixed inset-0 modal-overlay flex items-center justify-center z-50">
+    <div className="fixed inset-0 modal-overlay flex items-center justify-center z-[10000]">
       <div className="modal-content bg-gray-900 rounded-lg p-6 max-w-md w-full mx-4 border border-gray-800">
         <div className="flex items-start space-x-3 mb-4">
           <FaExclamationCircle className="text-yellow-500 text-2xl flex-shrink-0 mt-1" />

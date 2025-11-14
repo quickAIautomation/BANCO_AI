@@ -221,12 +221,9 @@ function Dashboard({ setIsAuthenticated }) {
 
   const handleFormClose = (carroCriado = false) => {
     setShowForm(false)
-    if (carroCriado && !carroEditando) {
-      // Carro foi criado (não editado)
+    // Só mostrar notificação se realmente foi criado um novo carro
+    if (carroCriado === true) {
       success('Carro cadastrado', 'O carro foi cadastrado com sucesso!')
-    } else if (carroCriado && carroEditando) {
-      // Carro foi editado
-      success('Carro atualizado', 'O carro foi atualizado com sucesso!')
     }
     setCarroEditando(null)
     carregarCarros()
@@ -396,8 +393,8 @@ function Dashboard({ setIsAuthenticated }) {
                    <div className="empty-state-icon">
                      <FaCar className="text-6xl text-red-600" />
                    </div>
-                   <h2 className="empty-state-title">Nenhum carro encontrado</h2>
-                   <p className="empty-state-description">
+                   <h2 className="empty-state-title text-white">Nenhum carro encontrado</h2>
+                   <p className="empty-state-description text-gray-400">
                      Comece cadastrando seu primeiro veículo no sistema
                    </p>
                    <div className="empty-state-action">

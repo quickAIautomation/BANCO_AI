@@ -70,7 +70,7 @@ function Header({
   }
 
   return (
-    <header className="bg-black border-b-2 border-red-600">
+    <header className="bg-black border-b-2 border-red-600 relative z-[9999]">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo/Título */}
@@ -162,7 +162,7 @@ function Header({
                     <FaBars className="text-xl" />
                   </button>
                   {userMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-gray-900 rounded-lg shadow-xl border border-gray-800 z-[60] user-menu-dropdown">
+                    <div className="absolute right-0 mt-2 w-48 bg-gray-900 rounded-lg shadow-xl border border-gray-800 z-[9999] user-menu-dropdown">
                       <div className="py-2">
                         <button
                           onClick={() => {
@@ -230,7 +230,7 @@ function Header({
                 <FaBars className="text-2xl" />
               </button>
               {userMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-gray-900 rounded-lg shadow-xl border border-gray-800 z-[60] user-menu-dropdown">
+                <div className="absolute right-0 mt-2 w-48 bg-gray-900 rounded-lg shadow-xl border border-gray-800 z-[9999] user-menu-dropdown">
                   <div className="py-2">
                     <button
                       onClick={() => {
