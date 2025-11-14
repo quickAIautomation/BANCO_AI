@@ -3,6 +3,7 @@ package com.bancoai.service;
 import com.bancoai.dto.BuscaEmpresaDTO;
 import com.bancoai.dto.EmpresaDTO;
 import com.bancoai.model.Empresa;
+import com.bancoai.repository.CarroRepository;
 import com.bancoai.repository.EmpresaRepository;
 import com.bancoai.repository.UsuarioRepository;
 import org.springframework.data.domain.Page;
@@ -21,11 +22,15 @@ public class EmpresaService {
     
     private final EmpresaRepository empresaRepository;
     private final UsuarioRepository usuarioRepository;
+    private final CarroRepository carroRepository;
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     
-    public EmpresaService(EmpresaRepository empresaRepository, UsuarioRepository usuarioRepository) {
+    public EmpresaService(EmpresaRepository empresaRepository, 
+                          UsuarioRepository usuarioRepository,
+                          CarroRepository carroRepository) {
         this.empresaRepository = empresaRepository;
         this.usuarioRepository = usuarioRepository;
+        this.carroRepository = carroRepository;
     }
     
     @Transactional
@@ -166,6 +171,33 @@ public class EmpresaService {
         // Desativar ao invés de deletar
         empresa.setAtiva(false);
         empresaRepository.save(empresa);
+    }
+    
+    @Transactional
+    public void removerEmpresa(Long id) {
+        Empresa empresa = empresaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
+        
+        // Verificar se há carros associados
+        long totalCarros = carroRepository.countByEmpresaId(id);
+        if (totalCarros > 0) {
+            throw new RuntimeException("Não é possível remover a empresa. Existem " + totalCarros + " carro(s) associado(s). Remova os carros primeiro ou desative a empresa.");
+        }
+        
+        // Verificar se há usuários com essa empresa como principal
+        List<com.bancoai.model.Usuario> usuariosComEmpresaPrincipal = usuarioRepository.findByEmpresaId(id);
+        if (!usuariosComEmpresaPrincipal.isEmpty()) {
+            throw new RuntimeException("Não é possível remover a empresa. Existem " + usuariosComEmpresaPrincipal.size() + " usuário(s) com esta empresa como principal. Altere a empresa principal dos usuários primeiro.");
+        }
+        
+        // Remover relacionamentos Many-to-Many com usuários
+        empresa.getUsuarios().forEach(usuario -> {
+            usuario.getEmpresas().remove(empresa);
+            usuarioRepository.save(usuario);
+        });
+        
+        // Remover a empresa
+        empresaRepository.delete(empresa);
     }
     
     private EmpresaDTO converterParaDTO(Empresa empresa) {

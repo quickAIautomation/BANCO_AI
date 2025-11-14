@@ -195,5 +195,21 @@ public class UsuarioController {
             return ResponseEntity.badRequest().build();
         }
     }
+    
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> removerUsuario(
+            @PathVariable Long id,
+            Authentication authentication) {
+        try {
+            String adminEmail = authentication.getName();
+            usuarioService.removerUsuario(id, adminEmail);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Erro ao remover usuário: " + e.getMessage());
+        }
+    }
 }
 

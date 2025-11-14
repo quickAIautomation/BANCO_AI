@@ -80,6 +80,20 @@ function Empresas({ setIsAuthenticated }) {
     }
   }
 
+  const handleRemoverEmpresa = async (id, nome) => {
+    if (window.confirm(`Tem certeza que deseja REMOVER permanentemente a empresa "${nome}"?\n\nEsta ação não pode ser desfeita.\n\nIMPORTANTE: A empresa não pode ter carros ou usuários associados.`)) {
+      try {
+        await api.delete(`/empresas/${id}/remover`)
+        carregarEmpresas()
+        alert('Empresa removida com sucesso')
+      } catch (error) {
+        console.error('Erro ao remover empresa:', error)
+        const errorMessage = error.response?.data || error.message || 'Erro ao remover empresa'
+        alert(typeof errorMessage === 'string' ? errorMessage : 'Erro ao remover empresa')
+      }
+    }
+  }
+
   const handleExpandirEmpresa = (empresaId) => {
     if (empresaExpandida === empresaId) {
       setEmpresaExpandida(null)
@@ -259,13 +273,22 @@ function Empresas({ setIsAuthenticated }) {
                         </button>
                       )}
                       {canDeleteEmpresa(userRole) && (
-                        <button
-                          onClick={() => handleDeletarEmpresa(empresa.id)}
-                          className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 flex items-center justify-center space-x-2 transition-colors"
-                        >
-                          <FaTrash />
-                          <span>Desativar</span>
-                        </button>
+                        <>
+                          <button
+                            onClick={() => handleDeletarEmpresa(empresa.id)}
+                            className="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 flex items-center justify-center space-x-2 transition-colors"
+                          >
+                            <FaTrash />
+                            <span>Desativar</span>
+                          </button>
+                          <button
+                            onClick={() => handleRemoverEmpresa(empresa.id, empresa.nome)}
+                            className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 flex items-center justify-center space-x-2 transition-colors"
+                          >
+                            <FaTrash />
+                            <span>Remover</span>
+                          </button>
+                        </>
                       )}
                     </div>
                   )}

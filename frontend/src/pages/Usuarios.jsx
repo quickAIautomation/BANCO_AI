@@ -106,6 +106,20 @@ function Usuarios({ setIsAuthenticated }) {
     }
   }
 
+  const handleRemoverUsuario = async (usuarioId, nome) => {
+    if (window.confirm(`Tem certeza que deseja REMOVER permanentemente o usuário "${nome}"?\n\nEsta ação não pode ser desfeita e irá remover:\n- Todas as API Keys do usuário\n- Todos os relacionamentos com empresas\n- O usuário do sistema`)) {
+      try {
+        await api.delete(`/usuarios/${usuarioId}`)
+        carregarUsuarios()
+        alert('Usuário removido com sucesso')
+      } catch (error) {
+        console.error('Erro ao remover usuário:', error)
+        const errorMessage = error.response?.data || error.message || 'Erro ao remover usuário'
+        alert(typeof errorMessage === 'string' ? errorMessage : 'Erro ao remover usuário')
+      }
+    }
+  }
+
   const handleFiltroChange = (field, value) => {
     setFiltros({ ...filtros, [field]: value === '' ? null : value, pagina: 0 })
   }
@@ -335,6 +349,13 @@ function Usuarios({ setIsAuthenticated }) {
                     }`}
                   >
                     {usuario.ativo ? 'Desativar' : 'Ativar'}
+                  </button>
+                  <button
+                    onClick={() => handleRemoverUsuario(usuario.id, usuario.nome)}
+                    className="w-full px-4 py-2 rounded-md text-white bg-red-600 hover:bg-red-700 flex items-center justify-center space-x-2"
+                  >
+                    <FaTrash />
+                    <span>Remover</span>
                   </button>
                 </div>
               </div>
