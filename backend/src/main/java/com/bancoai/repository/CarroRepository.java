@@ -31,29 +31,18 @@ public interface CarroRepository extends JpaRepository<Carro, Long> {
     List<Object[]> countByMarca(@Param("empresaId") Long empresaId);
     
     // Query otimizada para busca com filtros (evita carregar tudo em memória)
-    // Usando native query para melhor compatibilidade com PostgreSQL
-    @Query(value = "SELECT * FROM carros c WHERE c.empresa_id = :empresaId " +
-           "AND (:placa IS NULL OR UPPER(c.placa) LIKE '%' || UPPER(:placa) || '%') " +
-           "AND (:modelo IS NULL OR UPPER(c.modelo) LIKE '%' || UPPER(:modelo) || '%') " +
-           "AND (:marca IS NULL OR UPPER(c.marca) LIKE '%' || UPPER(:marca) || '%') " +
+    // Usando JPQL que funciona melhor com parâmetros NULL
+    @Query("SELECT c FROM Carro c WHERE c.empresa.id = :empresaId " +
+           "AND (:placa IS NULL OR UPPER(c.placa) LIKE CONCAT('%', UPPER(:placa), '%')) " +
+           "AND (:modelo IS NULL OR UPPER(c.modelo) LIKE CONCAT('%', UPPER(:modelo), '%')) " +
+           "AND (:marca IS NULL OR UPPER(c.marca) LIKE CONCAT('%', UPPER(:marca), '%')) " +
            "AND (:quilometragemMin IS NULL OR c.quilometragem >= :quilometragemMin) " +
            "AND (:quilometragemMax IS NULL OR c.quilometragem <= :quilometragemMax) " +
            "AND (:valorMin IS NULL OR c.valor >= :valorMin) " +
            "AND (:valorMax IS NULL OR c.valor <= :valorMax) " +
-           "AND (:dataInicio IS NULL OR c.data_cadastro >= :dataInicio) " +
-           "AND (:dataFim IS NULL OR c.data_cadastro <= :dataFim) " +
-           "ORDER BY c.data_cadastro DESC",
-           countQuery = "SELECT COUNT(*) FROM carros c WHERE c.empresa_id = :empresaId " +
-           "AND (:placa IS NULL OR UPPER(c.placa) LIKE '%' || UPPER(:placa) || '%') " +
-           "AND (:modelo IS NULL OR UPPER(c.modelo) LIKE '%' || UPPER(:modelo) || '%') " +
-           "AND (:marca IS NULL OR UPPER(c.marca) LIKE '%' || UPPER(:marca) || '%') " +
-           "AND (:quilometragemMin IS NULL OR c.quilometragem >= :quilometragemMin) " +
-           "AND (:quilometragemMax IS NULL OR c.quilometragem <= :quilometragemMax) " +
-           "AND (:valorMin IS NULL OR c.valor >= :valorMin) " +
-           "AND (:valorMax IS NULL OR c.valor <= :valorMax) " +
-           "AND (:dataInicio IS NULL OR c.data_cadastro >= :dataInicio) " +
-           "AND (:dataFim IS NULL OR c.data_cadastro <= :dataFim)",
-           nativeQuery = true)
+           "AND (:dataInicio IS NULL OR c.dataCadastro >= :dataInicio) " +
+           "AND (:dataFim IS NULL OR c.dataCadastro <= :dataFim) " +
+           "ORDER BY c.dataCadastro DESC")
     Page<Carro> buscarComFiltros(@Param("empresaId") Long empresaId,
                                   @Param("placa") String placa,
                                   @Param("modelo") String modelo,
