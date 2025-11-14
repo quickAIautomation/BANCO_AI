@@ -35,6 +35,9 @@ public class Carro {
     @Column(nullable = false, length = 50)
     private String marca;
     
+    @Column(precision = 10, scale = 2)
+    private java.math.BigDecimal valor;
+    
     @Column(columnDefinition = "TEXT")
     private String observacoes;
     

@@ -30,6 +30,9 @@ public class CarroDTO {
     @NotBlank(message = "Marca é obrigatória")
     private String marca;
     
+    @PositiveOrZero(message = "Valor deve ser maior ou igual a zero")
+    private java.math.BigDecimal valor;
+    
     private String observacoes;
     private List<String> fotos;
     private String dataCadastro;

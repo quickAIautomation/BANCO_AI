@@ -352,7 +352,8 @@ function Usuarios({ setIsAuthenticated }) {
                   </button>
                   <button
                     onClick={() => handleRemoverUsuario(usuario.id, usuario.nome)}
-                    className="w-full px-4 py-2 rounded-md text-white bg-red-600 hover:bg-red-700 flex items-center justify-center space-x-2"
+                    className="w-full px-4 py-2 rounded-md text-white bg-red-600 hover:bg-red-700 flex items-center justify-center space-x-2 transition-colors"
+                    type="button"
                   >
                     <FaTrash />
                     <span>Remover</span>
