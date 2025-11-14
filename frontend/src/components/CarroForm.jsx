@@ -10,6 +10,7 @@ function CarroForm({ carro, onClose, onSuccess }) {
     quilometragem: '',
     modelo: '',
     marca: '',
+    valor: '',
     observacoes: ''
   })
   const [fotos, setFotos] = useState([])
@@ -24,6 +25,7 @@ function CarroForm({ carro, onClose, onSuccess }) {
         quilometragem: carro.quilometragem || '',
         modelo: carro.modelo || '',
         marca: carro.marca || '',
+        valor: carro.valor || '',
         observacoes: carro.observacoes || ''
       })
       // Carregar fotos existentes (vêm como URLs do backend)
@@ -71,6 +73,7 @@ function CarroForm({ carro, onClose, onSuccess }) {
         quilometragem: parseInt(formData.quilometragem),
         modelo: formData.modelo,
         marca: formData.marca,
+        valor: formData.valor ? parseFloat(formData.valor) : null,
         observacoes: formData.observacoes
       }
       
@@ -208,6 +211,25 @@ function CarroForm({ carro, onClose, onSuccess }) {
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 text-black"
                 placeholder="Ex: Corolla"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="valor" className="block text-sm font-medium text-black mb-2">
+                Valor (R$)
+              </label>
+              <input
+                type="number"
+                id="valor"
+                name="valor"
+                value={formData.valor}
+                onChange={handleChange}
+                min="0"
+                step="0.01"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 text-black"
+                placeholder="0.00"
               />
             </div>
           </div>

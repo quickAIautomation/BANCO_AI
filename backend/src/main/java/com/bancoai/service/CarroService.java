@@ -66,6 +66,7 @@ public class CarroService {
         carro.setQuilometragem(carroDTO.getQuilometragem());
         carro.setModelo(carroDTO.getModelo());
         carro.setMarca(carroDTO.getMarca());
+        carro.setValor(carroDTO.getValor());
         carro.setObservacoes(carroDTO.getObservacoes());
         
         if (fotos != null && !fotos.isEmpty()) {
@@ -105,6 +106,7 @@ public class CarroService {
         carro.setQuilometragem(carroDTO.getQuilometragem());
         carro.setModelo(carroDTO.getModelo());
         carro.setMarca(carroDTO.getMarca());
+        carro.setValor(carroDTO.getValor());
         carro.setObservacoes(carroDTO.getObservacoes());
         
         if (novasFotos != null && !novasFotos.isEmpty()) {
@@ -174,6 +176,20 @@ public class CarroService {
                     }
                 }
                 
+                // Filtro por valor mínimo
+                if (buscaDTO.getValorMin() != null) {
+                    if (carro.getValor() == null || carro.getValor().compareTo(buscaDTO.getValorMin()) < 0) {
+                        return false;
+                    }
+                }
+                
+                // Filtro por valor máximo
+                if (buscaDTO.getValorMax() != null) {
+                    if (carro.getValor() == null || carro.getValor().compareTo(buscaDTO.getValorMax()) > 0) {
+                        return false;
+                    }
+                }
+                
                 // Filtro por data início
                 if (buscaDTO.getDataInicio() != null) {
                     if (carro.getDataCadastro() == null || carro.getDataCadastro().isBefore(buscaDTO.getDataInicio())) {
@@ -210,6 +226,15 @@ public class CarroService {
                     break;
                 case "placa":
                     resultado = c1.getPlaca().compareToIgnoreCase(c2.getPlaca());
+                    break;
+                case "valor":
+                    if (c1.getValor() != null && c2.getValor() != null) {
+                        resultado = c1.getValor().compareTo(c2.getValor());
+                    } else if (c1.getValor() == null && c2.getValor() != null) {
+                        resultado = 1;
+                    } else if (c1.getValor() != null && c2.getValor() == null) {
+                        resultado = -1;
+                    }
                     break;
                 default: // dataCadastro
                     if (c1.getDataCadastro() != null && c2.getDataCadastro() != null) {
@@ -331,6 +356,7 @@ public class CarroService {
         dto.setQuilometragem(carro.getQuilometragem());
         dto.setModelo(carro.getModelo());
         dto.setMarca(carro.getMarca());
+        dto.setValor(carro.getValor());
         dto.setObservacoes(carro.getObservacoes());
         dto.setFotos(carro.getFotos());
         dto.setDataCadastro(carro.getDataCadastro() != null 

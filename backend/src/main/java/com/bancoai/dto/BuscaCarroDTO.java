@@ -12,6 +12,8 @@ public class BuscaCarroDTO {
     private String marca;
     private Integer quilometragemMin;
     private Integer quilometragemMax;
+    private java.math.BigDecimal valorMin;
+    private java.math.BigDecimal valorMax;
     
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime dataInicio;

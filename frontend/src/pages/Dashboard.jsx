@@ -21,6 +21,8 @@ function Dashboard({ setIsAuthenticated }) {
     marca: '',
     quilometragemMin: '',
     quilometragemMax: '',
+    valorMin: '',
+    valorMax: '',
     dataInicio: '',
     ordenarPor: 'dataCadastro',
     direcao: 'DESC',
@@ -135,6 +137,8 @@ function Dashboard({ setIsAuthenticated }) {
         marca: filtros.marca && filtros.marca.trim() !== '' ? filtros.marca.trim() : null,
         quilometragemMin: filtros.quilometragemMin && filtros.quilometragemMin !== '' ? parseInt(filtros.quilometragemMin) : null,
         quilometragemMax: filtros.quilometragemMax && filtros.quilometragemMax !== '' ? parseInt(filtros.quilometragemMax) : null,
+        valorMin: filtros.valorMin && filtros.valorMin !== '' ? parseFloat(filtros.valorMin) : null,
+        valorMax: filtros.valorMax && filtros.valorMax !== '' ? parseFloat(filtros.valorMax) : null,
         dataInicio: dataInicio,
         dataFim: dataFim,
         ordenarPor: filtros.ordenarPor || 'dataCadastro',
@@ -186,6 +190,8 @@ function Dashboard({ setIsAuthenticated }) {
       marca: '',
       quilometragemMin: '',
       quilometragemMax: '',
+      valorMin: '',
+      valorMax: '',
       dataInicio: '',
       ordenarPor: 'dataCadastro',
       direcao: 'DESC',
@@ -310,6 +316,30 @@ function Dashboard({ setIsAuthenticated }) {
                   />
                 </div>
                 <div className="flex items-center space-x-2">
+                  <span className="text-gray-400">R$</span>
+                  <input
+                    type="number"
+                    placeholder="Valor Mínimo"
+                    value={filtros.valorMin}
+                    onChange={(e) => handleFiltroChange('valorMin', e.target.value)}
+                    min="0"
+                    step="0.01"
+                    className="flex-1 bg-gray-800 text-white px-4 py-2 rounded-md"
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-gray-400">R$</span>
+                  <input
+                    type="number"
+                    placeholder="Valor Máximo"
+                    value={filtros.valorMax}
+                    onChange={(e) => handleFiltroChange('valorMax', e.target.value)}
+                    min="0"
+                    step="0.01"
+                    className="flex-1 bg-gray-800 text-white px-4 py-2 rounded-md"
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
                   <FaCalendarAlt className="text-gray-400" />
                   <input
                     type="date"
@@ -328,6 +358,7 @@ function Dashboard({ setIsAuthenticated }) {
                   <option value="modelo">Modelo</option>
                   <option value="marca">Marca</option>
                   <option value="placa">Placa</option>
+                  <option value="valor">Valor</option>
                 </select>
                 <select
                   value={filtros.direcao}
