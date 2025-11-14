@@ -155,135 +155,51 @@ public class CarroService {
             throw new RuntimeException("Empresa não encontrada");
         }
         
-        // Buscar todos os carros da empresa primeiro (evita problemas com null)
-        List<Carro> todosCarros = carroRepository.findByEmpresaId(empresaId);
+        // Preparar parâmetros para a query (normalizar strings vazias para null)
+        String placa = (buscaDTO.getPlaca() != null && !buscaDTO.getPlaca().trim().isEmpty()) 
+            ? buscaDTO.getPlaca().trim() : null;
+        String modelo = (buscaDTO.getModelo() != null && !buscaDTO.getModelo().trim().isEmpty()) 
+            ? buscaDTO.getModelo().trim() : null;
+        String marca = (buscaDTO.getMarca() != null && !buscaDTO.getMarca().trim().isEmpty()) 
+            ? buscaDTO.getMarca().trim() : null;
         
-        // Aplicar filtros em memória (mais simples e evita problemas de tipo SQL)
-        List<Carro> carrosFiltrados = todosCarros.stream()
-            .filter(carro -> {
-                // Filtro por placa
-                if (buscaDTO.getPlaca() != null && !buscaDTO.getPlaca().trim().isEmpty()) {
-                    String placaBusca = buscaDTO.getPlaca().trim().toUpperCase();
-                    if (!carro.getPlaca().toUpperCase().contains(placaBusca)) {
-                        return false;
-                    }
-                }
-                
-                // Filtro por modelo
-                if (buscaDTO.getModelo() != null && !buscaDTO.getModelo().trim().isEmpty()) {
-                    String modeloBusca = buscaDTO.getModelo().trim().toUpperCase();
-                    if (!carro.getModelo().toUpperCase().contains(modeloBusca)) {
-                        return false;
-                    }
-                }
-                
-                // Filtro por marca
-                if (buscaDTO.getMarca() != null && !buscaDTO.getMarca().trim().isEmpty()) {
-                    String marcaBusca = buscaDTO.getMarca().trim().toUpperCase();
-                    if (!carro.getMarca().toUpperCase().contains(marcaBusca)) {
-                        return false;
-                    }
-                }
-                
-                // Filtro por quilometragem mínima
-                if (buscaDTO.getQuilometragemMin() != null) {
-                    if (carro.getQuilometragem() < buscaDTO.getQuilometragemMin()) {
-                        return false;
-                    }
-                }
-                
-                // Filtro por quilometragem máxima
-                if (buscaDTO.getQuilometragemMax() != null) {
-                    if (carro.getQuilometragem() > buscaDTO.getQuilometragemMax()) {
-                        return false;
-                    }
-                }
-                
-                // Filtro por valor mínimo
-                if (buscaDTO.getValorMin() != null) {
-                    if (carro.getValor() == null || carro.getValor().compareTo(buscaDTO.getValorMin()) < 0) {
-                        return false;
-                    }
-                }
-                
-                // Filtro por valor máximo
-                if (buscaDTO.getValorMax() != null) {
-                    if (carro.getValor() == null || carro.getValor().compareTo(buscaDTO.getValorMax()) > 0) {
-                        return false;
-                    }
-                }
-                
-                // Filtro por data início
-                if (buscaDTO.getDataInicio() != null) {
-                    if (carro.getDataCadastro() == null || carro.getDataCadastro().isBefore(buscaDTO.getDataInicio())) {
-                        return false;
-                    }
-                }
-                
-                // Filtro por data fim
-                if (buscaDTO.getDataFim() != null) {
-                    if (carro.getDataCadastro() == null || carro.getDataCadastro().isAfter(buscaDTO.getDataFim())) {
-                        return false;
-                    }
-                }
-                
-                return true;
-            })
-            .collect(Collectors.toList());
-        
-        // Aplicar ordenação
+        // Preparar ordenação
         String ordenarPor = buscaDTO.getOrdenarPor() != null ? buscaDTO.getOrdenarPor() : "dataCadastro";
         String direcao = buscaDTO.getDirecao() != null ? buscaDTO.getDirecao() : "DESC";
         
-        carrosFiltrados.sort((c1, c2) -> {
-            int resultado = 0;
-            switch (ordenarPor.toLowerCase()) {
-                case "quilometragem":
-                    resultado = c1.getQuilometragem().compareTo(c2.getQuilometragem());
-                    break;
-                case "modelo":
-                    resultado = c1.getModelo().compareToIgnoreCase(c2.getModelo());
-                    break;
-                case "marca":
-                    resultado = c1.getMarca().compareToIgnoreCase(c2.getMarca());
-                    break;
-                case "placa":
-                    resultado = c1.getPlaca().compareToIgnoreCase(c2.getPlaca());
-                    break;
-                case "valor":
-                    if (c1.getValor() != null && c2.getValor() != null) {
-                        resultado = c1.getValor().compareTo(c2.getValor());
-                    } else if (c1.getValor() == null && c2.getValor() != null) {
-                        resultado = 1;
-                    } else if (c1.getValor() != null && c2.getValor() == null) {
-                        resultado = -1;
-                    }
-                    break;
-                default: // dataCadastro
-                    if (c1.getDataCadastro() != null && c2.getDataCadastro() != null) {
-                        resultado = c1.getDataCadastro().compareTo(c2.getDataCadastro());
-                    }
-                    break;
-            }
-            return "DESC".equalsIgnoreCase(direcao) ? -resultado : resultado;
-        });
+        // Criar Pageable com ordenação
+        org.springframework.data.domain.Sort sort = org.springframework.data.domain.Sort.by(
+            "DESC".equalsIgnoreCase(direcao) 
+                ? org.springframework.data.domain.Sort.Direction.DESC 
+                : org.springframework.data.domain.Sort.Direction.ASC,
+            ordenarPor
+        );
         
-        // Aplicar paginação
         Integer pagina = buscaDTO.getPagina() != null ? buscaDTO.getPagina() : 0;
-        Integer tamanho = buscaDTO.getTamanho() != null && buscaDTO.getTamanho() > 0 ? buscaDTO.getTamanho() : 20;
+        Integer tamanho = buscaDTO.getTamanho() != null ? buscaDTO.getTamanho() : 20;
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(pagina, tamanho, sort);
         
-        int inicio = pagina * tamanho;
-        int fim = Math.min(inicio + tamanho, carrosFiltrados.size());
-        List<Carro> carrosPaginados = inicio < carrosFiltrados.size() 
-            ? carrosFiltrados.subList(inicio, fim) 
-            : List.of();
+        // Usar query otimizada do banco (não carrega tudo em memória)
+        org.springframework.data.domain.Page<Carro> carrosPage = carroRepository.buscarComFiltros(
+            empresaId,
+            placa,
+            modelo,
+            marca,
+            buscaDTO.getQuilometragemMin(),
+            buscaDTO.getQuilometragemMax(),
+            buscaDTO.getValorMin(),
+            buscaDTO.getValorMax(),
+            buscaDTO.getDataInicio(),
+            buscaDTO.getDataFim(),
+            pageable
+        );
         
         // Converter para DTO
-        List<CarroDTO> carrosDTO = carrosPaginados.stream()
+        List<CarroDTO> carrosDTO = carrosPage.getContent().stream()
             .map(this::converterParaDTO)
             .collect(Collectors.toList());
         
-        return new PageImpl<>(carrosDTO, PageRequest.of(pagina, tamanho), carrosFiltrados.size());
+        return new PageImpl<>(carrosDTO, pageable, carrosPage.getTotalElements());
     }
     
     @Transactional(readOnly = true)
