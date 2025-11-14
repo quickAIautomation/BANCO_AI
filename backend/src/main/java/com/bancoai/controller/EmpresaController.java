@@ -164,5 +164,35 @@ public class EmpresaController {
             return ResponseEntity.notFound().build();
         }
     }
+    
+    @DeleteMapping("/{id}/remover")
+    public ResponseEntity<?> removerEmpresa(@PathVariable Long id, Authentication authentication) {
+        try {
+            // Apenas admins podem remover empresas
+            String email = authentication.getName();
+            if (!usuarioService.isAdmin(email)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Apenas administradores podem remover empresas");
+            }
+            
+            com.bancoai.model.Usuario usuario = usuarioService.obterUsuarioCompleto(email);
+            
+            // Verificar se o usuário tem acesso a esta empresa
+            List<EmpresaDTO> empresasDoUsuario = empresaService.listarEmpresasDoUsuario(usuario.getId());
+            boolean temAcesso = empresasDoUsuario.stream()
+                    .anyMatch(e -> e.getId().equals(id));
+            
+            if (!temAcesso) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Você não tem acesso a esta empresa");
+            }
+            
+            empresaService.removerEmpresa(id);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Erro ao remover empresa: " + e.getMessage());
+        }
+    }
 }
 

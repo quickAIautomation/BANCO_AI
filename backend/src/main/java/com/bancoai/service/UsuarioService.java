@@ -9,6 +9,7 @@ import com.bancoai.dto.UsuarioDTO;
 import com.bancoai.model.Empresa;
 import com.bancoai.model.Usuario;
 import com.bancoai.model.enums.Role;
+import com.bancoai.repository.ApiKeyRepository;
 import com.bancoai.repository.EmpresaRepository;
 import com.bancoai.repository.UsuarioRepository;
 import org.springframework.data.domain.Page;
@@ -27,13 +28,16 @@ public class UsuarioService {
     
     private final UsuarioRepository usuarioRepository;
     private final EmpresaRepository empresaRepository;
+    private final ApiKeyRepository apiKeyRepository;
     private final PasswordEncoder passwordEncoder;
     
     public UsuarioService(UsuarioRepository usuarioRepository,
                           EmpresaRepository empresaRepository,
+                          ApiKeyRepository apiKeyRepository,
                           PasswordEncoder passwordEncoder) {
         this.usuarioRepository = usuarioRepository;
         this.empresaRepository = empresaRepository;
+        this.apiKeyRepository = apiKeyRepository;
         this.passwordEncoder = passwordEncoder;
     }
     
@@ -240,6 +244,44 @@ public class UsuarioService {
         // Atualizar senha
         usuario.setSenha(passwordEncoder.encode(updateSenhaDTO.getNovaSenha()));
         usuarioRepository.save(usuario);
+    }
+    
+    @Transactional
+    public void removerUsuario(Long usuarioId, String adminEmail) {
+        Usuario admin = usuarioRepository.findByEmail(adminEmail)
+                .orElseThrow(() -> new RuntimeException("Administrador não encontrado"));
+        
+        if (admin.getRole() != Role.ADMIN) {
+            throw new RuntimeException("Apenas administradores podem remover usuários");
+        }
+        
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        
+        // Não permitir remover a si mesmo
+        if (usuario.getId().equals(admin.getId())) {
+            throw new RuntimeException("Você não pode remover a si mesmo");
+        }
+        
+        // Verificar se é o último ADMIN (não permitir remover)
+        if (usuario.getRole() == Role.ADMIN) {
+            long totalAdmins = usuarioRepository.findAll().stream()
+                    .filter(u -> u.getRole() == Role.ADMIN && u.getAtivo())
+                    .count();
+            if (totalAdmins <= 1) {
+                throw new RuntimeException("Não é possível remover o último administrador do sistema");
+            }
+        }
+        
+        // Remover todas as API Keys do usuário
+        apiKeyRepository.findByUsuario(usuario).forEach(apiKeyRepository::delete);
+        
+        // Remover relacionamentos Many-to-Many com empresas
+        usuario.getEmpresas().clear();
+        usuarioRepository.save(usuario);
+        
+        // Remover o usuário
+        usuarioRepository.delete(usuario);
     }
 }
 
