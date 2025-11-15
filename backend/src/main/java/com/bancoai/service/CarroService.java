@@ -6,9 +6,13 @@ import com.bancoai.model.Carro;
 import com.bancoai.model.Empresa;
 import com.bancoai.repository.CarroRepository;
 import com.bancoai.repository.EmpresaRepository;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -155,46 +159,74 @@ public class CarroService {
             throw new RuntimeException("Empresa não encontrada");
         }
         
-        // Preparar parâmetros para a query (normalizar strings vazias para null e adicionar % para LIKE)
-        // IMPORTANTE: Converter para maiúsculas ANTES de passar para a query para evitar erro no PostgreSQL
-        // O PostgreSQL não permite aplicar UPPER em parâmetros NULL, então fazemos a conversão no service
-        String placa = (buscaDTO.getPlaca() != null && !buscaDTO.getPlaca().trim().isEmpty()) 
-            ? "%" + buscaDTO.getPlaca().trim().toUpperCase() + "%" : null;
-        String modelo = (buscaDTO.getModelo() != null && !buscaDTO.getModelo().trim().isEmpty()) 
-            ? "%" + buscaDTO.getModelo().trim().toUpperCase() + "%" : null;
-        String marca = (buscaDTO.getMarca() != null && !buscaDTO.getMarca().trim().isEmpty()) 
-            ? "%" + buscaDTO.getMarca().trim().toUpperCase() + "%" : null;
-        
         // Preparar ordenação
         String ordenarPor = buscaDTO.getOrdenarPor() != null ? buscaDTO.getOrdenarPor() : "dataCadastro";
         String direcao = buscaDTO.getDirecao() != null ? buscaDTO.getDirecao() : "DESC";
         
         // Criar Pageable com ordenação
-        org.springframework.data.domain.Sort sort = org.springframework.data.domain.Sort.by(
+        Sort sort = Sort.by(
             "DESC".equalsIgnoreCase(direcao) 
-                ? org.springframework.data.domain.Sort.Direction.DESC 
-                : org.springframework.data.domain.Sort.Direction.ASC,
+                ? Sort.Direction.DESC 
+                : Sort.Direction.ASC,
             ordenarPor
         );
         
         Integer pagina = buscaDTO.getPagina() != null ? buscaDTO.getPagina() : 0;
         Integer tamanho = buscaDTO.getTamanho() != null ? buscaDTO.getTamanho() : 20;
-        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(pagina, tamanho, sort);
+        Pageable pageable = PageRequest.of(pagina, tamanho, sort);
         
-        // Usar query otimizada do banco (não carrega tudo em memória)
-        org.springframework.data.domain.Page<Carro> carrosPage = carroRepository.buscarComFiltros(
-            empresaId,
-            placa,
-            modelo,
-            marca,
-            buscaDTO.getQuilometragemMin(),
-            buscaDTO.getQuilometragemMax(),
-            buscaDTO.getValorMin(),
-            buscaDTO.getValorMax(),
-            buscaDTO.getDataInicio(),
-            buscaDTO.getDataFim(),
-            pageable
-        );
+        // Usar Specification para construir query dinamicamente (evita problemas com NULL no PostgreSQL)
+        Specification<Carro> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new java.util.ArrayList<>();
+            
+            // Filtro obrigatório: empresa
+            predicates.add(cb.equal(root.get("empresa").get("id"), empresaId));
+            
+            // Filtros opcionais (só adiciona se não for NULL)
+            if (buscaDTO.getPlaca() != null && !buscaDTO.getPlaca().trim().isEmpty()) {
+                String placaUpper = "%" + buscaDTO.getPlaca().trim().toUpperCase() + "%";
+                predicates.add(cb.like(cb.upper(root.get("placa")), placaUpper));
+            }
+            
+            if (buscaDTO.getModelo() != null && !buscaDTO.getModelo().trim().isEmpty()) {
+                String modeloUpper = "%" + buscaDTO.getModelo().trim().toUpperCase() + "%";
+                predicates.add(cb.like(cb.upper(root.get("modelo")), modeloUpper));
+            }
+            
+            if (buscaDTO.getMarca() != null && !buscaDTO.getMarca().trim().isEmpty()) {
+                String marcaUpper = "%" + buscaDTO.getMarca().trim().toUpperCase() + "%";
+                predicates.add(cb.like(cb.upper(root.get("marca")), marcaUpper));
+            }
+            
+            if (buscaDTO.getQuilometragemMin() != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("quilometragem"), buscaDTO.getQuilometragemMin()));
+            }
+            
+            if (buscaDTO.getQuilometragemMax() != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("quilometragem"), buscaDTO.getQuilometragemMax()));
+            }
+            
+            if (buscaDTO.getValorMin() != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("valor"), buscaDTO.getValorMin()));
+            }
+            
+            if (buscaDTO.getValorMax() != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("valor"), buscaDTO.getValorMax()));
+            }
+            
+            if (buscaDTO.getDataInicio() != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("dataCadastro"), buscaDTO.getDataInicio()));
+            }
+            
+            if (buscaDTO.getDataFim() != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("dataCadastro"), buscaDTO.getDataFim()));
+            }
+            
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+        
+        // Executar query usando Specification
+        Page<Carro> carrosPage = carroRepository.findAll(spec, pageable);
         
         // Converter para DTO
         List<CarroDTO> carrosDTO = carrosPage.getContent().stream()
