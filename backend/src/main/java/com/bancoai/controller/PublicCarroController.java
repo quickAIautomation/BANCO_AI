@@ -1,11 +1,13 @@
 package com.bancoai.controller;
 
+import com.bancoai.dto.BuscaCarroDTO;
 import com.bancoai.dto.CarroDTO;
 import com.bancoai.service.CarroService;
 import com.bancoai.service.UsuarioService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -205,6 +207,85 @@ public class PublicCarroController {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Erro inesperado ao criar carro: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Endpoint público para buscar carros com filtros (valores, marcas, modelos, etc.)
+     * Requer autenticação via X-API-Key no header
+     * 
+     * Exemplo de uso para agente de IA:
+     * POST https://bancoai.com.br/api/public/carros/buscar
+     * Header: X-API-Key: sua_chave_api_aqui
+     * Content-Type: application/json
+     * Body: {
+     *   "marca": "Fiat",
+     *   "modelo": "Uno",
+     *   "valorMin": 20000,
+     *   "valorMax": 50000,
+     *   "quilometragemMax": 100000,
+     *   "pagina": 0,
+     *   "tamanho": 20
+     * }
+     * 
+     * Filtros disponíveis:
+     * - placa: String (busca parcial, case-insensitive)
+     * - modelo: String (busca parcial, case-insensitive)
+     * - marca: String (busca parcial, case-insensitive)
+     * - quilometragemMin: Integer
+     * - quilometragemMax: Integer
+     * - valorMin: BigDecimal
+     * - valorMax: BigDecimal
+     * - dataInicio: LocalDateTime (formato: "yyyy-MM-dd'T'HH:mm:ss")
+     * - dataFim: LocalDateTime (formato: "yyyy-MM-dd'T'HH:mm:ss")
+     * - ordenarPor: String (dataCadastro, quilometragem, modelo, marca, valor)
+     * - direcao: String (ASC, DESC)
+     * - pagina: Integer (padrão: 0)
+     * - tamanho: Integer (padrão: 20)
+     * 
+     * @param buscaDTO DTO com os filtros de busca
+     * @param request HttpServletRequest para obter a URL base
+     * @return Página de carros que correspondem aos filtros
+     */
+    @PostMapping("/buscar")
+    public ResponseEntity<?> buscarComFiltros(
+            @RequestBody(required = false) BuscaCarroDTO buscaDTO,
+            HttpServletRequest request) {
+        try {
+            // Validar se buscaDTO foi recebido
+            if (buscaDTO == null) {
+                buscaDTO = new BuscaCarroDTO(); // Buscar todos se não fornecido
+            }
+            
+            // Buscar carros com filtros (sem restrição de empresa)
+            Page<CarroDTO> carrosPage = carroService.buscarComFiltrosPublico(buscaDTO);
+            
+            // Adicionar URLs completas das fotos
+            String baseUrl = getBaseUrl(request);
+            List<CarroDTO> carrosComUrlsCompletas = carrosPage.getContent().stream()
+                    .map(carro -> adicionarUrlsCompletas(carro, baseUrl))
+                    .collect(Collectors.toList());
+            
+            // Criar nova página com URLs completas
+            Page<CarroDTO> resultado = new org.springframework.data.domain.PageImpl<>(
+                    carrosComUrlsCompletas,
+                    carrosPage.getPageable(),
+                    carrosPage.getTotalElements()
+            );
+            
+            return ResponseEntity.ok(resultado);
+        } catch (IllegalArgumentException e) {
+            System.err.println("Erro de validação ao buscar carros: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("Erro de validação: " + e.getMessage());
+        } catch (RuntimeException e) {
+            System.err.println("Erro ao buscar carros: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("Erro ao buscar carros: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Erro inesperado ao buscar carros: " + e.getClass().getName() + " - " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("Erro inesperado: " + e.getClass().getSimpleName() + " - " + e.getMessage());
         }
     }
     
