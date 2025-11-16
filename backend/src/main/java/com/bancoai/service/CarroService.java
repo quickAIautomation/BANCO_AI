@@ -371,4 +371,89 @@ public class CarroService {
         // Retornar o primeiro encontrado
         return converterParaDTO(carros.get(0));
     }
+    
+    /**
+     * Busca carros com filtros (público - sem restrição de empresa)
+     * Usado por agentes de IA e integrações externas
+     */
+    @Transactional(readOnly = true)
+    public Page<CarroDTO> buscarComFiltrosPublico(BuscaCarroDTO buscaDTO) {
+        // Preparar ordenação
+        String ordenarPor = buscaDTO.getOrdenarPor() != null ? buscaDTO.getOrdenarPor() : "dataCadastro";
+        String direcao = buscaDTO.getDirecao() != null ? buscaDTO.getDirecao() : "DESC";
+        
+        // Criar Pageable com ordenação
+        Sort sort = Sort.by(
+            "DESC".equalsIgnoreCase(direcao) 
+                ? Sort.Direction.DESC 
+                : Sort.Direction.ASC,
+            ordenarPor
+        );
+        
+        Integer pagina = buscaDTO.getPagina() != null ? buscaDTO.getPagina() : 0;
+        Integer tamanho = buscaDTO.getTamanho() != null ? buscaDTO.getTamanho() : 20;
+        Pageable pageable = PageRequest.of(pagina, tamanho, sort);
+        
+        // Usar Specification para construir query dinamicamente (sem filtro de empresa)
+        Specification<Carro> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new java.util.ArrayList<>();
+            
+            // Filtros opcionais (só adiciona se não for NULL)
+            if (buscaDTO.getPlaca() != null && !buscaDTO.getPlaca().trim().isEmpty()) {
+                String placaUpper = "%" + buscaDTO.getPlaca().trim().toUpperCase() + "%";
+                predicates.add(cb.like(cb.upper(root.get("placa")), placaUpper));
+            }
+            
+            if (buscaDTO.getModelo() != null && !buscaDTO.getModelo().trim().isEmpty()) {
+                String modeloUpper = "%" + buscaDTO.getModelo().trim().toUpperCase() + "%";
+                predicates.add(cb.like(cb.upper(root.get("modelo")), modeloUpper));
+            }
+            
+            if (buscaDTO.getMarca() != null && !buscaDTO.getMarca().trim().isEmpty()) {
+                String marcaUpper = "%" + buscaDTO.getMarca().trim().toUpperCase() + "%";
+                predicates.add(cb.like(cb.upper(root.get("marca")), marcaUpper));
+            }
+            
+            if (buscaDTO.getQuilometragemMin() != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("quilometragem"), buscaDTO.getQuilometragemMin()));
+            }
+            
+            if (buscaDTO.getQuilometragemMax() != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("quilometragem"), buscaDTO.getQuilometragemMax()));
+            }
+            
+            if (buscaDTO.getValorMin() != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("valor"), buscaDTO.getValorMin()));
+            }
+            
+            if (buscaDTO.getValorMax() != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("valor"), buscaDTO.getValorMax()));
+            }
+            
+            if (buscaDTO.getDataInicio() != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("dataCadastro"), buscaDTO.getDataInicio()));
+            }
+            
+            if (buscaDTO.getDataFim() != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("dataCadastro"), buscaDTO.getDataFim()));
+            }
+            
+            // Se não houver filtros, retornar todos os carros
+            if (predicates.isEmpty()) {
+                return cb.conjunction(); // WHERE TRUE
+            }
+            
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+        
+        // Executar query usando Specification
+        Page<Carro> carrosPage = carroRepository.findAll(spec, pageable);
+        
+        // Converter para DTO
+        List<CarroDTO> carrosDTO = carrosPage.getContent().stream()
+            .map(this::converterParaDTO)
+            .collect(Collectors.toList());
+        
+        return new PageImpl<>(carrosDTO, pageable, carrosPage.getTotalElements());
+    }
 }
