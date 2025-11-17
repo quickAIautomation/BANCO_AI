@@ -159,6 +159,18 @@ public class CarroService {
             throw new RuntimeException("Empresa não encontrada");
         }
         
+        // Log dos filtros recebidos para debug
+        System.out.println("=== DEBUG BUSCA ===");
+        System.out.println("EmpresaId (do usuário): " + empresaId);
+        System.out.println("EmpresaId (do filtro): " + buscaDTO.getEmpresaId());
+        System.out.println("Placa: " + buscaDTO.getPlaca());
+        System.out.println("Modelo: " + buscaDTO.getModelo());
+        System.out.println("Marca: " + buscaDTO.getMarca());
+        System.out.println("QuilometragemMin: " + buscaDTO.getQuilometragemMin());
+        System.out.println("QuilometragemMax: " + buscaDTO.getQuilometragemMax());
+        System.out.println("ValorMin: " + buscaDTO.getValorMin());
+        System.out.println("ValorMax: " + buscaDTO.getValorMax());
+        
         // Preparar ordenação
         String ordenarPor = buscaDTO.getOrdenarPor() != null ? buscaDTO.getOrdenarPor() : "dataCadastro";
         String direcao = buscaDTO.getDirecao() != null ? buscaDTO.getDirecao() : "DESC";
@@ -186,16 +198,19 @@ public class CarroService {
             if (buscaDTO.getPlaca() != null && !buscaDTO.getPlaca().trim().isEmpty()) {
                 String placaUpper = "%" + buscaDTO.getPlaca().trim().toUpperCase() + "%";
                 predicates.add(cb.like(cb.upper(root.get("placa")), placaUpper));
+                System.out.println("Filtro PLACA aplicado: " + placaUpper);
             }
             
             if (buscaDTO.getModelo() != null && !buscaDTO.getModelo().trim().isEmpty()) {
                 String modeloUpper = "%" + buscaDTO.getModelo().trim().toUpperCase() + "%";
                 predicates.add(cb.like(cb.upper(root.get("modelo")), modeloUpper));
+                System.out.println("Filtro MODELO aplicado: " + modeloUpper);
             }
             
             if (buscaDTO.getMarca() != null && !buscaDTO.getMarca().trim().isEmpty()) {
                 String marcaUpper = "%" + buscaDTO.getMarca().trim().toUpperCase() + "%";
                 predicates.add(cb.like(cb.upper(root.get("marca")), marcaUpper));
+                System.out.println("Filtro MARCA aplicado: " + marcaUpper);
             }
             
             if (buscaDTO.getQuilometragemMin() != null) {
@@ -228,10 +243,24 @@ public class CarroService {
         // Executar query usando Specification
         Page<Carro> carrosPage = carroRepository.findAll(spec, pageable);
         
+        System.out.println("Total de carros encontrados: " + carrosPage.getTotalElements());
+        System.out.println("Carros na página: " + carrosPage.getContent().size());
+        
+        // Garantir que o relacionamento empresa seja carregado (forçar inicialização)
+        carrosPage.getContent().forEach(carro -> {
+            if (carro.getEmpresa() != null) {
+                // Forçar carregamento do relacionamento
+                carro.getEmpresa().getId();
+                carro.getEmpresa().getNome();
+            }
+        });
+        
         // Converter para DTO
         List<CarroDTO> carrosDTO = carrosPage.getContent().stream()
             .map(this::converterParaDTO)
             .collect(Collectors.toList());
+        
+        System.out.println("=== FIM DEBUG BUSCA ===");
         
         return new PageImpl<>(carrosDTO, pageable, carrosPage.getTotalElements());
     }
@@ -351,6 +380,13 @@ public class CarroService {
     }
     
     @Transactional(readOnly = true)
+    public List<CarroDTO> listarTodosPublico(Long empresaId) {
+        return carroRepository.findByEmpresaId(empresaId).stream()
+                .map(this::converterParaDTO)
+                .collect(Collectors.toList());
+    }
+    
+    @Transactional(readOnly = true)
     public CarroDTO buscarPorIdPublico(Long id) {
         Carro carro = carroRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Carro não encontrado"));
@@ -397,6 +433,12 @@ public class CarroService {
         // Usar Specification para construir query dinamicamente (sem filtro de empresa)
         Specification<Carro> spec = (root, query, cb) -> {
             List<Predicate> predicates = new java.util.ArrayList<>();
+            
+            // Filtro opcional por empresa (se fornecido)
+            if (buscaDTO.getEmpresaId() != null) {
+                predicates.add(cb.equal(root.get("empresa").get("id"), buscaDTO.getEmpresaId()));
+                System.out.println("Filtro EMPRESA aplicado: " + buscaDTO.getEmpresaId());
+            }
             
             // Filtros opcionais (só adiciona se não for NULL)
             if (buscaDTO.getPlaca() != null && !buscaDTO.getPlaca().trim().isEmpty()) {
@@ -448,6 +490,15 @@ public class CarroService {
         
         // Executar query usando Specification
         Page<Carro> carrosPage = carroRepository.findAll(spec, pageable);
+        
+        // Garantir que o relacionamento empresa seja carregado (forçar inicialização)
+        carrosPage.getContent().forEach(carro -> {
+            if (carro.getEmpresa() != null) {
+                // Forçar carregamento do relacionamento
+                carro.getEmpresa().getId();
+                carro.getEmpresa().getNome();
+            }
+        });
         
         // Converter para DTO
         List<CarroDTO> carrosDTO = carrosPage.getContent().stream()
