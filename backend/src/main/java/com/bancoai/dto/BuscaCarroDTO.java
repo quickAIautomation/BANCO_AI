@@ -14,6 +14,7 @@ public class BuscaCarroDTO {
     private Integer quilometragemMax;
     private java.math.BigDecimal valorMin;
     private java.math.BigDecimal valorMax;
+    private Long empresaId; // Filtro opcional por empresa específica
     
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime dataInicio;

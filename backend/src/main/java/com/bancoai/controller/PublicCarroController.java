@@ -85,15 +85,25 @@ public class PublicCarroController {
      * 
      * Exemplo de uso no n8n:
      * GET http://localhost:8080/api/public/carros
+     * GET http://localhost:8080/api/public/carros?empresaId=1
      * Header: X-API-Key: sua_chave_api_aqui
      * 
+     * @param empresaId ID da empresa para filtrar (opcional - se não fornecido, retorna todos)
      * @param request HttpServletRequest para obter a URL base
-     * @return Lista de todos os carros com informações completas
+     * @return Lista de carros com informações completas (filtrados por empresa se empresaId fornecido)
      */
     @GetMapping
-    public ResponseEntity<List<CarroDTO>> listarTodosCarros(HttpServletRequest request) {
-        // API pública retorna todos os carros de todas as empresas
-        List<CarroDTO> carros = carroService.listarTodosPublico();
+    public ResponseEntity<List<CarroDTO>> listarTodosCarros(
+            @RequestParam(value = "empresaId", required = false) Long empresaId,
+            HttpServletRequest request) {
+        // Se empresaId foi fornecido, filtrar por empresa, senão retornar todos
+        List<CarroDTO> carros;
+        if (empresaId != null) {
+            carros = carroService.listarTodosPublico(empresaId);
+        } else {
+            carros = carroService.listarTodosPublico();
+        }
+        
         String baseUrl = getBaseUrl(request);
         
         // Converter URLs relativas das fotos para URLs absolutas
