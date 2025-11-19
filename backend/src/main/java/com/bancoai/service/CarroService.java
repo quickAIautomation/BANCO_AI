@@ -213,19 +213,20 @@ public class CarroService {
                 System.out.println("Filtro MARCA aplicado: " + marcaUpper);
             }
             
-            if (buscaDTO.getQuilometragemMin() != null) {
+            // Ignorar valores <= 0 (tratados como "sem filtro")
+            if (buscaDTO.getQuilometragemMin() != null && buscaDTO.getQuilometragemMin() > 0) {
                 predicates.add(cb.greaterThanOrEqualTo(root.get("quilometragem"), buscaDTO.getQuilometragemMin()));
             }
             
-            if (buscaDTO.getQuilometragemMax() != null) {
+            if (buscaDTO.getQuilometragemMax() != null && buscaDTO.getQuilometragemMax() > 0) {
                 predicates.add(cb.lessThanOrEqualTo(root.get("quilometragem"), buscaDTO.getQuilometragemMax()));
             }
             
-            if (buscaDTO.getValorMin() != null) {
+            if (buscaDTO.getValorMin() != null && buscaDTO.getValorMin().compareTo(java.math.BigDecimal.ZERO) > 0) {
                 predicates.add(cb.greaterThanOrEqualTo(root.get("valor"), buscaDTO.getValorMin()));
             }
             
-            if (buscaDTO.getValorMax() != null) {
+            if (buscaDTO.getValorMax() != null && buscaDTO.getValorMax().compareTo(java.math.BigDecimal.ZERO) > 0) {
                 predicates.add(cb.lessThanOrEqualTo(root.get("valor"), buscaDTO.getValorMax()));
             }
             
@@ -456,19 +457,20 @@ public class CarroService {
                 predicates.add(cb.like(cb.upper(root.get("marca")), marcaUpper));
             }
             
-            if (buscaDTO.getQuilometragemMin() != null) {
+            // Ignorar valores <= 0 (tratados como "sem filtro")
+            if (buscaDTO.getQuilometragemMin() != null && buscaDTO.getQuilometragemMin() > 0) {
                 predicates.add(cb.greaterThanOrEqualTo(root.get("quilometragem"), buscaDTO.getQuilometragemMin()));
             }
             
-            if (buscaDTO.getQuilometragemMax() != null) {
+            if (buscaDTO.getQuilometragemMax() != null && buscaDTO.getQuilometragemMax() > 0) {
                 predicates.add(cb.lessThanOrEqualTo(root.get("quilometragem"), buscaDTO.getQuilometragemMax()));
             }
             
-            if (buscaDTO.getValorMin() != null) {
+            if (buscaDTO.getValorMin() != null && buscaDTO.getValorMin().compareTo(java.math.BigDecimal.ZERO) > 0) {
                 predicates.add(cb.greaterThanOrEqualTo(root.get("valor"), buscaDTO.getValorMin()));
             }
             
-            if (buscaDTO.getValorMax() != null) {
+            if (buscaDTO.getValorMax() != null && buscaDTO.getValorMax().compareTo(java.math.BigDecimal.ZERO) > 0) {
                 predicates.add(cb.lessThanOrEqualTo(root.get("valor"), buscaDTO.getValorMax()));
             }
             
