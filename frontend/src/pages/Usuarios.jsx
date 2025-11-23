@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import Header from '../components/Header'
-import { FaUsers, FaPlus, FaUser, FaSearch, FaEdit, FaTrash, FaTimes, FaBuilding, FaCar, FaSignOutAlt, FaUpload, FaImage } from 'react-icons/fa'
+import { FaUsers, FaPlus, FaUser, FaSearch, FaEdit, FaTrash, FaTimes, FaBuilding, FaSignOutAlt, FaUpload, FaImage } from 'react-icons/fa'
+import Logo from '../components/Logo'
 import { removeToken } from '../utils/auth'
 import { useNotification } from '../contexts/NotificationContext'
 
@@ -190,7 +191,7 @@ function Usuarios({ setIsAuthenticated }) {
         onClick={() => navigate('/dashboard')}
         className="text-white hover:text-red-600 transition-colors flex items-center space-x-2 text-sm md:text-base py-2 md:py-0"
       >
-        <FaCar />
+        <Logo className="text-current" size="small" />
         <span>Carros</span>
       </button>
       <button

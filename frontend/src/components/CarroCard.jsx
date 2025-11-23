@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { FaEdit, FaTrash, FaCar, FaTachometerAlt, FaCalendarAlt, FaChevronLeft, FaChevronRight } from 'react-icons/fa'
+import { FaEdit, FaTrash, FaTachometerAlt, FaCalendarAlt, FaChevronLeft, FaChevronRight } from 'react-icons/fa'
 import { getApiBaseUrl } from '../services/api'
+import Logo from './Logo'
 
 function CarroCard({ carro, onEdit, onDelete, canEdit = true, canDelete = true }) {
   const [fotoAtual, setFotoAtual] = useState(0)
@@ -42,6 +43,8 @@ function CarroCard({ carro, onEdit, onDelete, canEdit = true, canDelete = true }
               src={fotoExibida} 
               alt={`${carro.marca} ${carro.modelo} - Foto ${fotoAtual + 1}`}
               className="w-full h-full object-cover transition-opacity duration-300"
+              loading="lazy"
+              decoding="async"
               onError={handleImageError}
             />
             
@@ -51,7 +54,7 @@ function CarroCard({ carro, onEdit, onDelete, canEdit = true, canDelete = true }
                 {/* Botão anterior */}
                 <button
                   onClick={fotoAnterior}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all z-10"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all z-10 min-w-[44px] min-h-[44px] flex items-center justify-center focus-visible:outline-2 focus-visible:outline-red-600 focus-visible:outline-offset-2"
                   aria-label="Foto anterior"
                 >
                   <FaChevronLeft />
@@ -60,7 +63,7 @@ function CarroCard({ carro, onEdit, onDelete, canEdit = true, canDelete = true }
                 {/* Botão próximo */}
                 <button
                   onClick={proximaFoto}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all z-10"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all z-10 min-w-[44px] min-h-[44px] flex items-center justify-center focus-visible:outline-2 focus-visible:outline-red-600 focus-visible:outline-offset-2"
                   aria-label="Próxima foto"
                 >
                   <FaChevronRight />
@@ -75,10 +78,11 @@ function CarroCard({ carro, onEdit, onDelete, canEdit = true, canDelete = true }
                         e.stopPropagation()
                         setFotoAtual(index)
                       }}
-                      className={`w-2 h-2 rounded-full transition-all ${
+                      className={`min-w-[8px] min-h-[8px] rounded-full transition-all focus-visible:outline-2 focus-visible:outline-red-600 focus-visible:outline-offset-1 ${
                         index === fotoAtual ? 'bg-red-600 w-6' : 'bg-white/50 hover:bg-white/70'
                       }`}
                       aria-label={`Ir para foto ${index + 1}`}
+                      aria-current={index === fotoAtual ? 'true' : 'false'}
                     />
                   ))}
                 </div>
@@ -91,11 +95,13 @@ function CarroCard({ carro, onEdit, onDelete, canEdit = true, canDelete = true }
             )}
             
             <div className="hidden absolute inset-0 flex items-center justify-center bg-gray-800">
-              <FaCar className="text-gray-600 text-6xl" />
+              <Logo className="text-red-600 opacity-50" size="xl" />
             </div>
           </>
         ) : (
-          <FaCar className="text-gray-600 text-6xl" />
+          <div className="flex items-center justify-center h-full">
+            <Logo className="text-red-600 opacity-50" size="xl" />
+          </div>
         )}
       </div>
 
@@ -143,12 +149,13 @@ function CarroCard({ carro, onEdit, onDelete, canEdit = true, canDelete = true }
 
         {/* Ações */}
         {(canEdit || canDelete) && (
-          <div className="flex space-x-2 pt-4 border-t border-gray-700">
+          <div className="flex flex-col sm:flex-row gap-2 pt-4 border-t border-gray-700">
             {canEdit && (
               <button
                 onClick={() => onEdit(carro)}
-                className="btn-primary flex-1 flex items-center justify-center space-x-2 pulse-on-hover"
+                className="btn-primary flex-1 flex items-center justify-center space-x-2 pulse-on-hover min-h-[44px]"
                 data-tooltip="Editar informações do carro"
+                aria-label="Editar carro"
               >
                 <FaEdit />
                 <span>Editar</span>
@@ -157,8 +164,9 @@ function CarroCard({ carro, onEdit, onDelete, canEdit = true, canDelete = true }
             {canDelete && (
               <button
                 onClick={() => onDelete(carro.id)}
-                className="btn-secondary flex-1 flex items-center justify-center space-x-2 pulse-on-hover"
+                className="btn-secondary flex-1 flex items-center justify-center space-x-2 pulse-on-hover min-h-[44px]"
                 data-tooltip="Remover carro do sistema"
+                aria-label="Deletar carro"
               >
                 <FaTrash />
                 <span>Deletar</span>

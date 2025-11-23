@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import { setToken, setUserRole, setUserEmpresaId, setUserEmpresaNome, setSelectedEmpresaId } from '../utils/auth'
-import { FaCar } from 'react-icons/fa'
+import Logo from '../components/Logo'
+import { useTranslation } from '../hooks/useTranslation'
 
 function Login({ setIsAuthenticated }) {
   const [email, setEmail] = useState('')
@@ -10,6 +11,7 @@ function Login({ setIsAuthenticated }) {
   const [erro, setErro] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const { t } = useTranslation()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -46,8 +48,13 @@ function Login({ setIsAuthenticated }) {
       const errorMessage = error.response?.data?.message || 
                           error.response?.data || 
                           error.message || 
-                          'Credenciais inválidas. Tente novamente.'
-      setErro(typeof errorMessage === 'string' ? errorMessage : 'Credenciais inválidas. Tente novamente.')
+                          t('login.invalidCredentials')
+      setErro(typeof errorMessage === 'string' ? errorMessage : t('login.invalidCredentials'))
+      
+      // Se for erro de conexão, mostrar mensagem específica
+      if (error.code === 'ERR_NETWORK' || error.message?.includes('Network Error')) {
+        setErro(t('login.networkError'))
+      }
     } finally {
       setLoading(false)
     }
@@ -58,14 +65,14 @@ function Login({ setIsAuthenticated }) {
       <div className="w-full max-w-md">
         <div className="text-center mb-6 md:mb-8">
           <div className="flex items-center justify-center mb-4">
-            <FaCar className="text-red-600 text-4xl md:text-6xl" />
+            <Logo className="text-red-600" size="xl" />
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">BANCO AI</h1>
-          <p className="text-gray-400 text-sm md:text-base">Sistema de Gerenciamento de Carros</p>
+          <p className="text-gray-400 text-sm md:text-base">{t('login.subtitle')}</p>
         </div>
 
         <div className="bg-white rounded-lg shadow-lg p-6 md:p-8">
-          <h2 className="text-xl md:text-2xl font-bold text-black mb-6 text-center">Login Administrador</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-black mb-6 text-center">{t('login.adminLogin')}</h2>
           
           {erro && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -76,7 +83,7 @@ function Login({ setIsAuthenticated }) {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-black mb-2">
-                Email
+                {t('login.email')}
               </label>
               <input
                 type="email"
@@ -91,7 +98,7 @@ function Login({ setIsAuthenticated }) {
 
             <div>
               <label htmlFor="senha" className="block text-sm font-medium text-black mb-2">
-                Senha
+                {t('login.password')}
               </label>
               <input
                 type="password"
@@ -109,7 +116,7 @@ function Login({ setIsAuthenticated }) {
               disabled={loading}
               className="w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Entrando...' : 'Entrar'}
+              {loading ? t('login.submitting') : t('login.submit')}
             </button>
           </form>
 
@@ -119,16 +126,16 @@ function Login({ setIsAuthenticated }) {
               onClick={() => navigate('/esqueceu-senha')}
               className="text-sm text-red-600 hover:text-red-700 hover:underline block"
             >
-              Esqueceu a senha?
+              {t('login.forgotPassword')}
             </button>
             <p className="text-sm text-gray-600">
-              Não tem uma conta?{' '}
+              {t('login.noAccount')}{' '}
               <button
                 type="button"
                 onClick={() => navigate('/register')}
                 className="text-red-600 hover:text-red-700 hover:underline font-medium"
               >
-                Criar Conta
+                {t('login.register')}
               </button>
             </p>
             <p className="text-sm text-gray-600 mt-2">
@@ -137,13 +144,13 @@ function Login({ setIsAuthenticated }) {
                 onClick={() => navigate('/recursos')}
                 className="text-red-600 hover:text-red-700 hover:underline"
               >
-                Ver Recursos da Plataforma
+                {t('login.viewResources')}
               </button>
             </p>
           </div>
 
           <div className="mt-6 text-center text-xs md:text-sm text-gray-600">
-            <p>Credenciais padrão:</p>
+            <p>{t('login.defaultCredentials')}</p>
             <p className="font-mono text-xs md:text-sm break-all">admin@bancoai.com / admin123</p>
           </div>
         </div>

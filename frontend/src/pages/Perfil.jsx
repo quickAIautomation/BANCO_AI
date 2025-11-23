@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
+import { getApiBaseUrl } from '../services/api'
 import { setUserRole } from '../utils/auth'
 import { FaUser, FaEnvelope, FaLock, FaArrowLeft, FaCheck, FaUpload, FaCamera } from 'react-icons/fa'
+import ImageEditor from '../components/ImageEditor'
 
 function Perfil({ setIsAuthenticated }) {
   const [usuario, setUsuario] = useState({ email: '', nome: '' })
@@ -13,6 +15,9 @@ function Perfil({ setIsAuthenticated }) {
   const [sucesso, setSucesso] = useState('')
   const [fotoPreview, setFotoPreview] = useState(null)
   const [loadingFoto, setLoadingFoto] = useState(false)
+  const [showCropper, setShowCropper] = useState(false)
+  const [imageToCrop, setImageToCrop] = useState(null)
+  const fileInputRef = useRef(null)
   const navigate = useNavigate()
 
   // Formulário de email
@@ -40,11 +45,19 @@ function Perfil({ setIsAuthenticated }) {
       }
       // Carregar preview da foto se existir
       if (response.data.foto) {
-        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
-        const fotoUrl = response.data.foto.startsWith('http') 
-          ? response.data.foto 
-          : `${apiBaseUrl.replace('/api', '')}${response.data.foto}`
-        setFotoPreview(fotoUrl)
+        const apiBaseUrl = getApiBaseUrl()
+        let fotoUrl = response.data.foto
+        
+        // Se a foto começa com /api, construir URL completa
+        if (fotoUrl.startsWith('/api')) {
+          fotoUrl = `${apiBaseUrl.replace('/api', '')}${fotoUrl}`
+        } else if (!fotoUrl.startsWith('http')) {
+          // Se não começa com http nem /api, assumir que é relativa
+          fotoUrl = `${apiBaseUrl.replace('/api', '')}/api${fotoUrl}`
+        }
+        
+        // Adicionar timestamp para evitar cache
+        setFotoPreview(`${fotoUrl}?t=${Date.now()}`)
       } else {
         setFotoPreview(null)
       }
@@ -117,36 +130,75 @@ function Perfil({ setIsAuthenticated }) {
   }
   
   const handleFotoClick = () => {
-    const input = document.createElement('input')
-    input.type = 'file'
-    input.accept = 'image/*'
-    input.onchange = async (e) => {
-      const file = e.target.files[0]
-      if (file) {
-        setLoadingFoto(true)
-        setErro('')
-        setSucesso('')
-        
-        try {
-          const formData = new FormData()
-          formData.append('foto', file)
-          
-          await api.put('/usuarios/perfil/foto', formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data'
-            }
-          })
-          
-          setSucesso('Foto atualizada com sucesso!')
-          carregarPerfil()
-        } catch (error) {
-          setErro(error.response?.data || 'Erro ao atualizar foto')
-        } finally {
-          setLoadingFoto(false)
-        }
+    fileInputRef.current?.click()
+  }
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Validar tipo de arquivo
+      if (!file.type.startsWith('image/')) {
+        setErro('Por favor, selecione um arquivo de imagem')
+        return
       }
+
+      // Validar tamanho (máximo 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setErro('A imagem deve ter no máximo 5MB')
+        return
+      }
+
+      // Criar URL para preview
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        setImageToCrop(event.target.result)
+        setShowCropper(true)
+      }
+      reader.onerror = () => {
+        setErro('Erro ao ler o arquivo')
+      }
+      reader.readAsDataURL(file)
     }
-    input.click()
+    // Limpar input para permitir selecionar o mesmo arquivo novamente
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  const handleCropComplete = async (croppedFile) => {
+    setShowCropper(false)
+    setImageToCrop(null)
+    setLoadingFoto(true)
+    setErro('')
+    setSucesso('')
+    
+    try {
+      const formData = new FormData()
+      formData.append('foto', croppedFile)
+      
+      await api.put('/usuarios/perfil/foto', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+      
+      setSucesso('Foto atualizada com sucesso!')
+      // Recarregar perfil após um pequeno delay para garantir que o servidor processou
+      setTimeout(() => {
+        carregarPerfil()
+      }, 500)
+    } catch (error) {
+      console.error('Erro ao atualizar foto:', error)
+      const errorMessage = error.response?.data?.message || error.response?.data || error.message || 'Erro ao atualizar foto'
+      setErro(typeof errorMessage === 'string' ? errorMessage : 'Erro ao atualizar foto')
+    } finally {
+      setLoadingFoto(false)
+    }
+  }
+
+  const handleCancelCrop = () => {
+    setShowCropper(false)
+    setImageToCrop(null)
   }
 
   if (loading) {
@@ -162,6 +214,25 @@ function Perfil({ setIsAuthenticated }) {
 
   return (
     <div className="min-h-screen bg-black">
+      {/* Input de arquivo oculto */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileSelect}
+        className="hidden"
+      />
+
+      {/* Image Editor Modal */}
+      {showCropper && imageToCrop && (
+        <ImageEditor
+          image={imageToCrop}
+          onSave={handleCropComplete}
+          onCancel={handleCancelCrop}
+          aspectRatio={1}
+        />
+      )}
+
       {/* Header */}
       <header className="bg-black border-b-2 border-red-600">
         <div className="container mx-auto px-4 py-4">
@@ -209,6 +280,11 @@ function Perfil({ setIsAuthenticated }) {
                   src={fotoPreview}
                   alt={usuario.nome || 'Usuário'}
                   className="w-24 h-24 rounded-full object-cover border-4 border-red-600 shadow-lg transition-all group-hover:border-red-500 group-hover:shadow-xl"
+                  onError={(e) => {
+                    console.error('Erro ao carregar foto:', fotoPreview)
+                    e.target.style.display = 'none'
+                    setFotoPreview(null)
+                  }}
                 />
                 {loadingFoto && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 rounded-full">

@@ -1,0 +1,10 @@
+FAVICON - LOGO.PNG
+==================
+
+Para o favicon funcionar corretamente na aba do navegador, você também precisa colocar uma cópia da logo aqui na pasta public com o nome:
+- logo.png
+
+Ou você pode criar um favicon.ico a partir da sua logo.png usando ferramentas online.
+
+A logo principal está em: frontend/src/assets/images/logo.png
+

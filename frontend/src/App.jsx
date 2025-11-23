@@ -53,7 +53,7 @@ function App() {
   }
 
   return (
-    <Router>
+    <Router future={{ v7_relativeSplatPath: true }}>
       <AnimatedRoutes isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} />
     </Router>
   )
