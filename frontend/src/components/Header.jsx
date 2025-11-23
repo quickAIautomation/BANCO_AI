@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { FaCar, FaBars, FaTimes, FaPlus, FaUser, FaBuilding, FaKey, FaSignOutAlt, FaBell, FaArrowLeft, FaCog } from 'react-icons/fa'
+import { FaBars, FaTimes, FaPlus, FaUser, FaBuilding, FaKey, FaSignOutAlt, FaBell, FaArrowLeft, FaCog } from 'react-icons/fa'
 import { useNotification } from '../contexts/NotificationContext'
+import Logo from './Logo'
+import { useTranslation } from '../hooks/useTranslation'
 
 function Header({ 
   title = 'BANCO AI', 
-  icon: Icon = FaCar,
   userRole,
   empresas = [],
   empresaSelecionada,
@@ -27,6 +28,7 @@ function Header({
   const unreadCount = history.length > 0 ? history.length : 0
   const userMenuRefDesktop = useRef(null)
   const empresaMenuRef = useRef(null)
+  const { t } = useTranslation()
   
   // Determinar se deve mostrar botão de voltar (não mostrar no dashboard)
   const shouldShowBack = showBackButton && location.pathname !== '/dashboard'
@@ -83,8 +85,8 @@ function Header({
                 <FaArrowLeft className="text-2xl" />
               </button>
             )}
-            <Icon className="text-red-600 text-2xl md:text-3xl" />
-            <h1 className="text-xl md:text-3xl font-bold text-white">{title}</h1>
+            <Logo className="text-red-600" size="default" />
+            <h1 className="text-2xl md:text-4xl font-bold text-white">{title}</h1>
           </div>
 
           {/* Menu Desktop - Oculto em mobile */}
@@ -101,7 +103,7 @@ function Header({
                     >
                       <FaBuilding className="text-red-600" />
                       <span className="max-w-[150px] truncate">
-                        {empresaSelecionadaObj?.nome || 'Selecionar Empresa'}
+                        {empresaSelecionadaObj?.nome || t('header.selectCompany')}
                       </span>
                     </button>
                     
@@ -139,7 +141,7 @@ function Header({
                     className="btn-primary flex items-center space-x-2 text-sm px-3 py-2"
                   >
                     <FaPlus />
-                    <span className="hidden lg:inline">Novo Carro</span>
+                    <span className="hidden lg:inline">{t('dashboard.newCar')}</span>
                   </button>
                 )}
                 {canManageEmpresas && (
@@ -148,7 +150,7 @@ function Header({
                     className="text-white hover:text-red-600 transition-colors flex items-center space-x-2 text-sm"
                   >
                     <FaBuilding />
-                    <span className="hidden lg:inline">Empresas</span>
+                    <span className="hidden lg:inline">{t('dashboard.companies')}</span>
                   </button>
                 )}
                 {/* Menu Hambúrguer para Notificações, Perfil, Configurações e Sair */}
@@ -171,7 +173,7 @@ function Header({
                           className="w-full text-left text-white hover:bg-gray-800 flex items-center space-x-2 px-4 py-2 relative user-menu-item"
                         >
                           <FaBell />
-                          <span>Notificações</span>
+                          <span>{t('header.notifications')}</span>
                           {unreadCount > 0 && (
                             <span className="ml-auto bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                               {unreadCount > 9 ? '9+' : unreadCount}
@@ -186,7 +188,7 @@ function Header({
                           className="w-full text-left text-white hover:bg-gray-800 flex items-center space-x-2 px-4 py-2 user-menu-item"
                         >
                           <FaUser />
-                          <span>Perfil</span>
+                          <span>{t('header.profile')}</span>
                         </button>
                         <button
                           onClick={() => {
@@ -196,7 +198,7 @@ function Header({
                           className="w-full text-left text-white hover:bg-gray-800 flex items-center space-x-2 px-4 py-2 user-menu-item"
                         >
                           <FaCog />
-                          <span>Configurações</span>
+                          <span>{t('header.settings')}</span>
                         </button>
                         <div className="border-t border-gray-800 my-1 user-menu-divider"></div>
                         <button
@@ -207,7 +209,7 @@ function Header({
                           className="w-full text-left text-white hover:bg-gray-800 flex items-center space-x-2 px-4 py-2 user-menu-item"
                         >
                           <FaSignOutAlt />
-                          <span>Sair</span>
+                          <span>{t('header.logout')}</span>
                         </button>
                       </div>
                     </div>
@@ -263,7 +265,7 @@ function Header({
                         <div className="flex items-center space-x-2">
                           <FaBuilding className="text-red-600" />
                           <span className="truncate">
-                            {empresaSelecionadaObj?.nome || 'Selecionar Empresa'}
+                            {empresaSelecionadaObj?.nome || t('header.selectCompany')}
                           </span>
                         </div>
                       </button>
@@ -316,7 +318,7 @@ function Header({
                       className="btn-primary flex items-center space-x-2 w-full justify-center px-4 py-3"
                     >
                       <FaPlus />
-                      <span>Novo Carro</span>
+                      <span>{t('dashboard.newCar')}</span>
                     </button>
                   )}
                   {canManageEmpresas && (
@@ -328,7 +330,7 @@ function Header({
                       className="w-full text-left text-white hover:bg-gray-800 flex items-center space-x-2 px-4 py-3 transition-colors rounded"
                     >
                       <FaBuilding />
-                      <span>Empresas</span>
+                      <span>{t('dashboard.companies')}</span>
                     </button>
                   )}
                 </>
@@ -346,7 +348,7 @@ function Header({
                 className="w-full text-left text-white hover:bg-gray-800 flex items-center space-x-2 px-4 py-3 transition-colors rounded relative"
               >
                 <FaBell />
-                <span>Notificações</span>
+                <span>{t('header.notifications')}</span>
                 {unreadCount > 0 && (
                   <span className="ml-auto bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                     {unreadCount > 9 ? '9+' : unreadCount}
@@ -361,7 +363,7 @@ function Header({
                 className="w-full text-left text-white hover:bg-gray-800 flex items-center space-x-2 px-4 py-3 transition-colors rounded"
               >
                 <FaUser />
-                <span>Perfil</span>
+                <span>{t('header.profile')}</span>
               </button>
               <button
                 onClick={() => {
@@ -371,7 +373,7 @@ function Header({
                 className="w-full text-left text-white hover:bg-gray-800 flex items-center space-x-2 px-4 py-3 transition-colors rounded"
               >
                 <FaCog />
-                <span>Configurações</span>
+                <span>{t('header.settings')}</span>
               </button>
               <div className="border-t border-gray-800 my-1"></div>
               <button
@@ -382,7 +384,7 @@ function Header({
                 className="w-full text-left text-white hover:bg-gray-800 flex items-center space-x-2 px-4 py-3 transition-colors rounded"
               >
                 <FaSignOutAlt />
-                <span>Sair</span>
+                <span>{t('header.logout')}</span>
               </button>
             </div>
           </div>

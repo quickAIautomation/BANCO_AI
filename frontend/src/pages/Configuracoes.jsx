@@ -4,6 +4,9 @@ import api from '../services/api'
 import { FaArrowLeft, FaKey, FaPlus, FaTrash, FaCheck, FaTimes, FaCopy, FaMoon, FaSun, FaBell, FaBellSlash, FaCog, FaEnvelope, FaEnvelopeOpen, FaChevronDown, FaChevronUp } from 'react-icons/fa'
 import { useTheme } from '../contexts/ThemeContext'
 import { useNotification } from '../contexts/NotificationContext'
+import { useLanguage } from '../contexts/LanguageContext'
+import { useTranslation } from '../hooks/useTranslation'
+import LanguageSelector from '../components/LanguageSelector'
 
 function Configuracoes({ setIsAuthenticated }) {
   const [apiKeys, setApiKeys] = useState([])
@@ -19,6 +22,8 @@ function Configuracoes({ setIsAuthenticated }) {
   const navigate = useNavigate()
   const { toggleTheme, isDark } = useTheme()
   const { notificationsEnabled, toggleNotifications } = useNotification()
+  const { language, changeLanguage } = useLanguage()
+  const { t } = useTranslation()
 
   useEffect(() => {
     carregarApiKeys()
@@ -42,10 +47,10 @@ function Configuracoes({ setIsAuthenticated }) {
     try {
       await api.put('/usuarios/perfil/email-notificacoes', novoValor)
       setEmailNotificacoesAtivadas(novoValor)
-      setSucesso(`Notificações por email ${novoValor ? 'ativadas' : 'desativadas'} com sucesso!`)
+      setSucesso(t('settings.emailNotifications.success', { status: novoValor ? t('common.enabled') : t('common.disabled') }))
       setTimeout(() => setSucesso(''), 3000)
     } catch (error) {
-      setErro('Erro ao atualizar preferências de email')
+      setErro(t('settings.emailNotifications.error'))
       setTimeout(() => setErro(''), 3000)
     } finally {
       setLoadingEmailNotif(false)
@@ -84,68 +89,68 @@ function Configuracoes({ setIsAuthenticated }) {
       setNovaChaveCompleta(response.data.chave)
       setNovaChaveNome('')
       setShowForm(false)
-      setSucesso('API Key criada com sucesso! Copie a chave agora, pois ela não será exibida novamente.')
+      setSucesso(t('settings.apiKeys.createSuccess'))
       carregarApiKeys()
     } catch (error) {
-      setErro(error.response?.data?.error || 'Erro ao criar API Key')
+      setErro(error.response?.data?.error || t('settings.apiKeys.error'))
     }
   }
 
   const handleDesativarApiKey = async (id) => {
-    if (!window.confirm('Tem certeza que deseja desativar esta API Key?')) {
+    if (!window.confirm(t('settings.apiKeys.deactivateConfirm'))) {
       return
     }
 
     try {
       await api.put(`/apikeys/${id}/desativar`)
-      setSucesso('API Key desativada com sucesso!')
+      setSucesso(t('settings.apiKeys.deactivateSuccess'))
       carregarApiKeys()
     } catch (error) {
-      setErro(error.response?.data?.error || 'Erro ao desativar API Key')
+      setErro(error.response?.data?.error || t('settings.apiKeys.error'))
     }
   }
 
   const handleAtivarApiKey = async (id) => {
     try {
       await api.put(`/apikeys/${id}/ativar`)
-      setSucesso('API Key ativada com sucesso!')
+      setSucesso(t('settings.apiKeys.activateSuccess'))
       carregarApiKeys()
     } catch (error) {
-      setErro(error.response?.data?.error || 'Erro ao ativar API Key')
+      setErro(error.response?.data?.error || t('settings.apiKeys.error'))
     }
   }
 
   const handleDeletarApiKey = async (id) => {
-    if (!window.confirm('Tem certeza que deseja deletar esta API Key? Esta ação não pode ser desfeita.')) {
+    if (!window.confirm(t('settings.apiKeys.deleteConfirm'))) {
       return
     }
 
     try {
       await api.delete(`/apikeys/${id}`)
-      setSucesso('API Key deletada com sucesso!')
+      setSucesso(t('settings.apiKeys.deleteSuccess'))
       carregarApiKeys()
     } catch (error) {
-      setErro(error.response?.data?.error || 'Erro ao deletar API Key')
+      setErro(error.response?.data?.error || t('settings.apiKeys.error'))
     }
   }
 
   const copiarChave = (chave) => {
     navigator.clipboard.writeText(chave)
-    setSucesso('Chave copiada para a área de transferência!')
+    setSucesso(t('settings.apiKeys.copySuccess'))
     setTimeout(() => setSucesso(''), 3000)
   }
 
 
   const formatarData = (data) => {
-    if (!data) return 'Nunca'
-    return new Date(data).toLocaleString('pt-BR')
+    if (!data) return t('common.never')
+    return new Date(data).toLocaleString(language === 'pt-BR' ? 'pt-BR' : 'en-US')
   }
 
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <div className="text-white text-xl mb-4">Carregando configurações...</div>
+          <div className="text-white text-xl mb-4">{t('settings.loading')}</div>
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
         </div>
       </div>
@@ -167,7 +172,7 @@ function Configuracoes({ setIsAuthenticated }) {
                 <FaArrowLeft className="text-2xl" />
               </button>
               <FaCog className="text-red-600 text-3xl" />
-              <h1 className="text-3xl font-bold text-white">Configurações</h1>
+              <h1 className="text-3xl font-bold text-white">{t('settings.title')}</h1>
             </div>
           </div>
         </div>
@@ -190,9 +195,20 @@ function Configuracoes({ setIsAuthenticated }) {
 
         {/* Configurações Gerais */}
         <div className="bg-gray-900 rounded-lg p-6 mb-6 border border-gray-700">
-          <h3 className="text-xl font-bold text-white mb-6">Configurações Gerais</h3>
+          <h3 className="text-xl font-bold text-white mb-6">{t('settings.general')}</h3>
           
           <div className="space-y-6">
+            {/* Idioma */}
+            <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <div>
+                  <h4 className="text-white font-semibold">{t('settings.language')}</h4>
+                  <p className="text-gray-400 text-sm">{t('settings.language.description')}</p>
+                </div>
+              </div>
+              <LanguageSelector />
+            </div>
+
             {/* Tema */}
             <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
               <div className="flex items-center space-x-3">
@@ -202,8 +218,8 @@ function Configuracoes({ setIsAuthenticated }) {
                   <FaSun className="text-yellow-500 text-xl" />
                 )}
                 <div>
-                  <h4 className="text-white font-semibold">Tema</h4>
-                  <p className="text-gray-400 text-sm">Escolha entre tema claro ou escuro</p>
+                  <h4 className="text-white font-semibold">{t('settings.theme')}</h4>
+                  <p className="text-gray-400 text-sm">{t('settings.theme.description')}</p>
                 </div>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
@@ -215,7 +231,7 @@ function Configuracoes({ setIsAuthenticated }) {
                 />
                 <div className="w-14 h-7 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-red-600"></div>
                 <span className="ml-3 text-sm font-medium text-gray-300">
-                  {isDark ? 'Escuro' : 'Claro'}
+                  {isDark ? t('settings.theme.dark') : t('settings.theme.light')}
                 </span>
               </label>
             </div>
@@ -229,8 +245,8 @@ function Configuracoes({ setIsAuthenticated }) {
                   <FaBellSlash className="text-gray-500 text-xl" />
                 )}
                 <div>
-                  <h4 className="text-white font-semibold">Notificações</h4>
-                  <p className="text-gray-400 text-sm">Ative ou desative as notificações do sistema</p>
+                  <h4 className="text-white font-semibold">{t('settings.notifications')}</h4>
+                  <p className="text-gray-400 text-sm">{t('settings.notifications.description')}</p>
                 </div>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
@@ -242,7 +258,7 @@ function Configuracoes({ setIsAuthenticated }) {
                 />
                 <div className="w-14 h-7 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-red-600"></div>
                 <span className="ml-3 text-sm font-medium text-gray-300">
-                  {notificationsEnabled ? 'Ativadas' : 'Desativadas'}
+                  {notificationsEnabled ? t('common.enabled') : t('common.disabled')}
                 </span>
               </label>
             </div>
@@ -256,8 +272,8 @@ function Configuracoes({ setIsAuthenticated }) {
                   <FaEnvelopeOpen className="text-gray-500 text-xl" />
                 )}
                 <div>
-                  <h4 className="text-white font-semibold">Notificações por Email</h4>
-                  <p className="text-gray-400 text-sm">Receba emails quando novos carros forem cadastrados</p>
+                  <h4 className="text-white font-semibold">{t('settings.emailNotifications')}</h4>
+                  <p className="text-gray-400 text-sm">{t('settings.emailNotifications.description')}</p>
                 </div>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
@@ -270,7 +286,7 @@ function Configuracoes({ setIsAuthenticated }) {
                 />
                 <div className={`w-14 h-7 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-red-600 ${loadingEmailNotif ? 'opacity-50 cursor-not-allowed' : ''}`}></div>
                 <span className="ml-3 text-sm font-medium text-gray-300">
-                  {emailNotificacoesAtivadas ? 'Ativadas' : 'Desativadas'}
+                  {emailNotificacoesAtivadas ? t('common.enabled') : t('common.disabled')}
                 </span>
               </label>
             </div>
@@ -281,7 +297,7 @@ function Configuracoes({ setIsAuthenticated }) {
         {novaChaveCompleta && (
           <div className="bg-gray-900 border-2 border-red-600 rounded-lg p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-white">Nova API Key Criada!</h3>
+              <h3 className="text-xl font-bold text-white">{t('settings.apiKeys.newKeyCreated')}</h3>
               <button
                 onClick={() => {
                   setNovaChaveCompleta(null)
@@ -293,7 +309,7 @@ function Configuracoes({ setIsAuthenticated }) {
               </button>
             </div>
             <p className="text-yellow-300 mb-4">
-              ⚠️ Copie esta chave agora! Ela não será exibida novamente por segurança.
+              {t('settings.apiKeys.warning')}
             </p>
             <div className="bg-black rounded p-4 mb-4 flex items-center justify-between">
               <code className="text-green-400 font-mono text-sm break-all">{novaChaveCompleta}</code>
@@ -302,11 +318,11 @@ function Configuracoes({ setIsAuthenticated }) {
                 className="btn-primary ml-4 flex items-center space-x-2"
               >
                 <FaCopy />
-                <span>Copiar</span>
+                <span>{t('common.copy')}</span>
               </button>
             </div>
             <div className="bg-gray-800 rounded p-4">
-              <p className="text-white text-sm mb-2"><strong>Como usar no n8n:</strong></p>
+              <p className="text-white text-sm mb-2"><strong>{t('settings.apiKeys.howToUse')}</strong></p>
               <code className="text-gray-300 text-xs block">
                 GET http://localhost:8080/api/public/carros<br />
                 Header: X-API-Key: {novaChaveCompleta}
@@ -320,7 +336,7 @@ function Configuracoes({ setIsAuthenticated }) {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
               <FaKey className="text-red-600 text-xl" />
-              <h3 className="text-xl font-bold text-white">Criar Nova API Key</h3>
+              <h3 className="text-xl font-bold text-white">{t('settings.apiKeys.create')}</h3>
             </div>
             <button
               onClick={() => {
@@ -331,7 +347,7 @@ function Configuracoes({ setIsAuthenticated }) {
               className="btn-primary flex items-center space-x-2"
             >
               <FaPlus />
-              <span>{showForm ? 'Cancelar' : 'Nova API Key'}</span>
+              <span>{showForm ? t('common.cancel') : t('settings.apiKeys.create')}</span>
             </button>
           </div>
 
@@ -339,13 +355,13 @@ function Configuracoes({ setIsAuthenticated }) {
             <form onSubmit={handleCriarApiKey} className="space-y-4 mt-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Nome da API Key (opcional)
+                  {t('settings.apiKeys.name')}
                 </label>
                 <input
                   type="text"
                   value={novaChaveNome}
                   onChange={(e) => setNovaChaveNome(e.target.value)}
-                  placeholder="Ex: Integração n8n"
+                  placeholder={t('settings.apiKeys.namePlaceholder')}
                   className="input-enhanced w-full text-white"
                 />
               </div>
@@ -353,7 +369,7 @@ function Configuracoes({ setIsAuthenticated }) {
                 type="submit"
                 className="btn-primary w-full"
               >
-                Criar API Key
+                {t('settings.apiKeys.create')}
               </button>
             </form>
           )}
@@ -361,16 +377,16 @@ function Configuracoes({ setIsAuthenticated }) {
 
         {/* Lista de API Keys */}
         <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
-          <h3 className="text-xl font-bold text-white mb-4">Suas API Keys</h3>
+          <h3 className="text-xl font-bold text-white mb-4">{t('settings.apiKeys.yourKeys')}</h3>
           
           {apiKeys.length === 0 ? (
             <div className="empty-state py-8">
               <div className="empty-state-icon" style={{ width: '80px', height: '80px' }}>
                 <FaKey className="text-4xl text-red-600" />
               </div>
-              <h3 className="empty-state-title" style={{ fontSize: '20px' }}>Nenhuma API Key criada</h3>
+              <h3 className="empty-state-title" style={{ fontSize: '20px' }}>{t('settings.apiKeys.noKeys')}</h3>
               <p className="empty-state-description" style={{ fontSize: '14px' }}>
-                Crie uma para começar a integrar com n8n!
+                {t('settings.apiKeys.noKeysDescription')}
               </p>
             </div>
           ) : (
@@ -393,7 +409,7 @@ function Configuracoes({ setIsAuthenticated }) {
                               : 'bg-gray-600 text-gray-300'
                           }`}
                         >
-                          {apiKey.ativa ? 'Ativa' : 'Inativa'}
+                          {apiKey.ativa ? t('common.active') : t('common.inactive')}
                         </span>
                       </div>
                       
@@ -414,22 +430,22 @@ function Configuracoes({ setIsAuthenticated }) {
                         </div>
                         {apiKey.chave.startsWith('...') && (
                           <p className="text-yellow-400 text-xs mt-2">
-                            ⚠️ A chave completa não está disponível por segurança. Crie uma nova chave se necessário.
+                            {t('settings.apiKeys.keyNotAvailable')}
                           </p>
                         )}
                       </div>
                       
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm text-gray-400">
                         <div>
-                          <span className="text-gray-500">Criada em:</span>
+                          <span className="text-gray-500">{t('settings.apiKeys.created')}</span>
                           <p className="text-white">{formatarData(apiKey.dataCriacao)}</p>
                         </div>
                         <div>
-                          <span className="text-gray-500">Último uso:</span>
+                          <span className="text-gray-500">{t('settings.apiKeys.lastUsed')}</span>
                           <p className="text-white">{formatarData(apiKey.ultimoUso)}</p>
                         </div>
                         <div>
-                          <span className="text-gray-500">Total de usos:</span>
+                          <span className="text-gray-500">{t('settings.apiKeys.totalUses')}</span>
                           <p className="text-white">{apiKey.totalUsos || 0}</p>
                         </div>
                       </div>
@@ -441,14 +457,14 @@ function Configuracoes({ setIsAuthenticated }) {
                           onClick={() => handleDesativarApiKey(apiKey.id)}
                           className="btn-warning text-sm px-3 py-2"
                         >
-                          Desativar
+                          {t('common.deactivate')}
                         </button>
                       ) : (
                         <button
                           onClick={() => handleAtivarApiKey(apiKey.id)}
                           className="btn-success text-sm px-3 py-2"
                         >
-                          Ativar
+                          {t('common.activate')}
                         </button>
                       )}
                       <button
@@ -456,7 +472,7 @@ function Configuracoes({ setIsAuthenticated }) {
                         className="btn-danger text-sm px-3 py-2 flex items-center justify-center space-x-1"
                       >
                         <FaTrash />
-                        <span>Deletar</span>
+                        <span>{t('common.delete')}</span>
                       </button>
                     </div>
                   </div>
@@ -472,7 +488,7 @@ function Configuracoes({ setIsAuthenticated }) {
             onClick={() => setShowN8nInstructions(!showN8nInstructions)}
             className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-800 transition-colors"
           >
-            <h3 className="text-xl font-bold text-white">n8n</h3>
+            <h3 className="text-xl font-bold text-white">{t('n8n.instructions')}</h3>
             {showN8nInstructions ? (
               <FaChevronUp className="text-gray-400" />
             ) : (
@@ -481,11 +497,11 @@ function Configuracoes({ setIsAuthenticated }) {
           </button>
           {showN8nInstructions && (
             <div className="px-4 pb-4 space-y-3 text-gray-300">
-              <p>1. Crie uma API Key acima</p>
-              <p>2. No n8n, adicione um nó HTTP Request</p>
-              <p>3. Configure a URL: <code className="bg-black px-2 py-1 rounded">http://localhost:8080/api/public/carros</code></p>
-              <p>4. Adicione o header: <code className="bg-black px-2 py-1 rounded">X-API-Key: sua_chave_aqui</code></p>
-              <p>5. Execute o workflow!</p>
+              <p>{t('n8n.step1')}</p>
+              <p>{t('n8n.step2')}</p>
+              <p>{t('n8n.step3')} <code className="bg-black px-2 py-1 rounded">http://localhost:8080/api/public/carros</code></p>
+              <p>{t('n8n.step4')} <code className="bg-black px-2 py-1 rounded">X-API-Key: sua_chave_aqui</code></p>
+              <p>{t('n8n.step5')}</p>
             </div>
           )}
         </div>

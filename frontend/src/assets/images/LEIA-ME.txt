@@ -1,0 +1,13 @@
+COLOQUE SUA LOGO AQUI
+=====================
+
+Por favor, coloque sua imagem de logo no formato PNG neste diretório com o nome:
+- logo.png
+
+A imagem será usada em toda a aplicação e como favicon.
+
+Recomendações:
+- Tamanho recomendado: 512x512px ou maior (será redimensionado automaticamente)
+- Formato: PNG com fundo transparente (preferencial)
+- Nome do arquivo: logo.png (exatamente este nome)
+

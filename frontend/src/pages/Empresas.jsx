@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import Header from '../components/Header'
-import { FaBuilding, FaPlus, FaUser, FaEdit, FaTrash, FaTimes, FaUsers, FaShieldAlt, FaUserShield, FaUserCheck, FaUserTimes, FaChevronDown, FaChevronUp, FaCar, FaSignOutAlt } from 'react-icons/fa'
+import { FaBuilding, FaPlus, FaUser, FaEdit, FaTrash, FaTimes, FaUsers, FaShieldAlt, FaUserShield, FaUserCheck, FaUserTimes, FaChevronDown, FaChevronUp, FaSignOutAlt } from 'react-icons/fa'
+import Logo from '../components/Logo'
 import { removeToken, getUserRole } from '../utils/auth'
 import { canCreateEmpresa, canEditEmpresa, canDeleteEmpresa, canManageUsuarios } from '../utils/permissions'
 import { useNotification } from '../contexts/NotificationContext'
@@ -205,7 +206,7 @@ function Empresas({ setIsAuthenticated }) {
         onClick={() => navigate('/dashboard')}
         className="text-white hover:text-red-600 transition-colors flex items-center space-x-2 text-sm md:text-base py-2 md:py-0"
       >
-        <FaCar />
+        <Logo className="text-current" size="small" />
         <span>Carros</span>
       </button>
       {canCreateEmpresa(userRole) && (

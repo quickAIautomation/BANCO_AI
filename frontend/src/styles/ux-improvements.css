@@ -247,6 +247,7 @@ h1, h2, h3, h4, h5, h6 {
 .input-enhanced {
   background: rgba(31, 41, 55, 0.6);
   backdrop-filter: blur(10px);
+  min-height: 44px; /* WCAG - Área de toque mínima */
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   padding: 12px 16px;

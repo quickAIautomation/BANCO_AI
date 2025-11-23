@@ -1,4 +1,4 @@
-import { FaCar } from 'react-icons/fa'
+import Logo from './Logo'
 
 export const LoadingSpinner = ({ size = 'md', text = 'Carregando...' }) => {
   const sizeClasses = {
@@ -14,7 +14,7 @@ export const LoadingSpinner = ({ size = 'md', text = 'Carregando...' }) => {
         <div className="absolute inset-0 border-4 border-red-600/20 rounded-full"></div>
         <div className="absolute inset-0 border-4 border-transparent border-t-red-600 rounded-full animate-spin"></div>
         <div className="absolute inset-0 flex items-center justify-center">
-          <FaCar className="text-red-600 text-xs animate-pulse" />
+          <Logo className="text-red-600 animate-pulse" size="small" />
         </div>
       </div>
       {text && (

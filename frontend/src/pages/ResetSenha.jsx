@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import api from '../services/api'
-import { FaCar, FaLock } from 'react-icons/fa'
+import { FaLock } from 'react-icons/fa'
+import Logo from '../components/Logo'
 
 function ResetSenha() {
   const [searchParams] = useSearchParams()
@@ -81,7 +82,7 @@ function ResetSenha() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <FaCar className="text-red-600 text-6xl" />
+            <Logo className="text-red-600" size="xl" />
           </div>
           <h1 className="text-4xl font-bold text-white mb-2">BANCO AI</h1>
           <p className="text-gray-400">Redefinir Senha</p>

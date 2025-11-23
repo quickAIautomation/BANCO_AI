@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useNotification } from '../contexts/NotificationContext'
 import Header from '../components/Header'
-import { FaBell, FaTrash, FaCheckCircle, FaTimesCircle, FaExclamationCircle, FaInfoCircle, FaCar, FaSignOutAlt, FaUser, FaBuilding, FaFilter } from 'react-icons/fa'
+import { FaBell, FaTrash, FaCheckCircle, FaTimesCircle, FaExclamationCircle, FaInfoCircle, FaSignOutAlt, FaUser, FaBuilding, FaFilter } from 'react-icons/fa'
+import Logo from '../components/Logo'
 import { removeToken } from '../utils/auth'
 
 function Notificacoes({ setIsAuthenticated }) {
@@ -91,7 +92,7 @@ function Notificacoes({ setIsAuthenticated }) {
         onClick={() => navigate('/dashboard')}
         className="text-white hover:text-red-600 transition-colors flex items-center space-x-2 text-sm md:text-base py-2 md:py-0"
       >
-        <FaCar />
+        <Logo className="text-current" size="small" />
         <span>Carros</span>
       </button>
       <button

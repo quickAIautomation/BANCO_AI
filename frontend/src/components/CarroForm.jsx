@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react'
 import api from '../services/api'
 import { getUserRole, getSelectedEmpresaId } from '../utils/auth'
 import { getApiBaseUrl } from '../services/api'
-import { FaTimes, FaUpload, FaCar, FaTachometerAlt, FaTag, FaDollarSign, FaFileAlt, FaImage, FaTrash } from 'react-icons/fa'
+import { FaTimes, FaUpload, FaTachometerAlt, FaTag, FaDollarSign, FaFileAlt, FaImage, FaTrash } from 'react-icons/fa'
+import Logo from './Logo'
+import { useTranslation } from '../hooks/useTranslation'
 
 function CarroForm({ carro, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
@@ -18,6 +20,7 @@ function CarroForm({ carro, onClose, onSuccess }) {
   const [fotosExistentes, setFotosExistentes] = useState([]) // URLs das fotos existentes do backend
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState('')
+  const { t } = useTranslation()
 
   useEffect(() => {
     if (carro) {
@@ -173,9 +176,9 @@ function CarroForm({ carro, onClose, onSuccess }) {
         {/* Header */}
         <div className="bg-gray-900 border-b border-gray-700 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
           <div className="flex items-center space-x-3">
-            <FaCar className="text-red-600 text-2xl" />
+            <Logo className="text-red-600" size="default" />
             <h2 className="text-2xl font-bold text-white">
-              {carro ? 'Editar Carro' : 'Novo Carro'}
+              {carro ? t('carForm.editCar') : t('carForm.newCar')}
             </h2>
           </div>
           <button
@@ -200,15 +203,15 @@ function CarroForm({ carro, onClose, onSuccess }) {
             {/* Informações Básicas */}
             <div className="glass-container p-6">
               <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
-                <FaCar className="text-red-600" />
-                <span>Informações Básicas</span>
+                <Logo className="text-red-600" size="small" />
+                <span>{t('carForm.basicInfo')}</span>
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="placa" className="block text-sm font-medium text-gray-300 mb-2 flex items-center space-x-2">
                     <FaTag className="text-red-600 text-xs" />
-                    <span>Placa *</span>
+                    <span>{t('carForm.plate')} *</span>
                   </label>
                   <input
                     type="text"
@@ -219,14 +222,14 @@ function CarroForm({ carro, onClose, onSuccess }) {
                     required
                     maxLength={10}
                     className="input-enhanced w-full text-white"
-                    placeholder="ABC-1234"
+                    placeholder={t('carForm.platePlaceholder')}
                   />
                 </div>
 
                 <div>
                   <label htmlFor="quilometragem" className="block text-sm font-medium text-gray-300 mb-2 flex items-center space-x-2">
                     <FaTachometerAlt className="text-red-600 text-xs" />
-                    <span>Quilometragem *</span>
+                    <span>{t('carForm.mileage')} *</span>
                   </label>
                   <input
                     type="number"
@@ -237,7 +240,7 @@ function CarroForm({ carro, onClose, onSuccess }) {
                     required
                     min="0"
                     className="input-enhanced w-full text-white"
-                    placeholder="0"
+                    placeholder={t('carForm.mileagePlaceholder')}
                   />
                 </div>
               </div>
@@ -245,8 +248,8 @@ function CarroForm({ carro, onClose, onSuccess }) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <div>
                   <label htmlFor="marca" className="block text-sm font-medium text-gray-300 mb-2 flex items-center space-x-2">
-                    <FaCar className="text-red-600 text-xs" />
-                    <span>Marca *</span>
+                    <Logo className="text-red-600 opacity-70" size="small" />
+                    <span>{t('carForm.brand')} *</span>
                   </label>
                   <input
                     type="text"
@@ -256,14 +259,14 @@ function CarroForm({ carro, onClose, onSuccess }) {
                     onChange={handleChange}
                     required
                     className="input-enhanced w-full text-white"
-                    placeholder="Ex: Toyota"
+                    placeholder={t('carForm.brandPlaceholder')}
                   />
                 </div>
 
                 <div>
                   <label htmlFor="modelo" className="block text-sm font-medium text-gray-300 mb-2 flex items-center space-x-2">
                     <FaTag className="text-red-600 text-xs" />
-                    <span>Modelo *</span>
+                    <span>{t('carForm.model')} *</span>
                   </label>
                   <input
                     type="text"
@@ -273,7 +276,7 @@ function CarroForm({ carro, onClose, onSuccess }) {
                     onChange={handleChange}
                     required
                     className="input-enhanced w-full text-white"
-                    placeholder="Ex: Corolla"
+                    placeholder={t('carForm.modelPlaceholder')}
                   />
                 </div>
               </div>
@@ -281,7 +284,7 @@ function CarroForm({ carro, onClose, onSuccess }) {
               <div className="mt-4">
                 <label htmlFor="valor" className="block text-sm font-medium text-gray-300 mb-2 flex items-center space-x-2">
                   <FaDollarSign className="text-red-600 text-xs" />
-                  <span>Valor (R$)</span>
+                  <span>{t('carForm.value')} (R$)</span>
                 </label>
                 <input
                   type="number"
@@ -292,7 +295,7 @@ function CarroForm({ carro, onClose, onSuccess }) {
                   min="0"
                   step="0.01"
                   className="input-enhanced w-full text-white"
-                  placeholder="0.00"
+                  placeholder={t('carForm.valuePlaceholder')}
                 />
               </div>
             </div>
@@ -301,7 +304,7 @@ function CarroForm({ carro, onClose, onSuccess }) {
             <div className="glass-container p-6">
               <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
                 <FaFileAlt className="text-red-600" />
-                <span>Observações</span>
+                <span>{t('carForm.notes')}</span>
               </h3>
               <textarea
                 id="observacoes"
@@ -310,7 +313,7 @@ function CarroForm({ carro, onClose, onSuccess }) {
                 onChange={handleChange}
                 rows="4"
                 className="input-enhanced w-full text-white resize-none"
-                placeholder="Observações sobre o veículo..."
+                placeholder={t('carForm.notesPlaceholder')}
               />
             </div>
 
@@ -318,13 +321,13 @@ function CarroForm({ carro, onClose, onSuccess }) {
             <div className="glass-container p-6">
               <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
                 <FaImage className="text-red-600" />
-                <span>Fotos do Veículo</span>
+                <span>{t('carForm.vehiclePhotos')}</span>
               </h3>
               
               <div className="flex items-center space-x-4 mb-4">
                 <label className="btn-primary flex items-center space-x-2 cursor-pointer pulse-on-hover">
                   <FaUpload />
-                  <span>Selecionar Fotos</span>
+                  <span>{t('carForm.selectPhotos')}</span>
                   <input
                     type="file"
                     id="fotos"
@@ -354,7 +357,7 @@ function CarroForm({ carro, onClose, onSuccess }) {
                         type="button"
                         onClick={() => handleRemovePhoto(index)}
                         className="absolute top-2 right-2 bg-red-600 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700"
-                        aria-label="Remover foto"
+                        aria-label={t('carForm.removePhoto')}
                       >
                         <FaTrash className="text-xs" />
                       </button>
@@ -375,10 +378,10 @@ function CarroForm({ carro, onClose, onSuccess }) {
               {loading ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>Salvando...</span>
+                  <span>{t('carForm.saving')}</span>
                 </>
               ) : (
-                <span>{carro ? 'Atualizar' : 'Cadastrar'}</span>
+                <span>{carro ? t('carForm.update') : t('carForm.register')}</span>
               )}
             </button>
             <button

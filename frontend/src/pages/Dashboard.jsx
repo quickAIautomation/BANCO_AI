@@ -7,7 +7,10 @@ import CarroForm from '../components/CarroForm'
 import Header from '../components/Header'
 import { canCreateCarro, canEditCarro, canDeleteCarro, canManageEmpresas } from '../utils/permissions'
 import { useNotification } from '../contexts/NotificationContext'
-import { FaCar, FaSearch, FaTachometerAlt, FaCalendarAlt, FaFilter } from 'react-icons/fa'
+import { FaSearch, FaTachometerAlt, FaCalendarAlt, FaFilter } from 'react-icons/fa'
+import Logo from '../components/Logo'
+import SkeletonCard from '../components/SkeletonCard'
+import { useTranslation } from '../hooks/useTranslation'
 
 function Dashboard({ setIsAuthenticated }) {
   const [carros, setCarros] = useState([])
@@ -36,6 +39,7 @@ function Dashboard({ setIsAuthenticated }) {
   const [inicializado, setInicializado] = useState(false)
   const navigate = useNavigate()
   const { success } = useNotification()
+  const { t } = useTranslation()
 
   useEffect(() => {
     const inicializar = async () => {
@@ -223,14 +227,14 @@ function Dashboard({ setIsAuthenticated }) {
     setShowForm(false)
     // Só mostrar notificação se realmente foi criado um novo carro
     if (carroCriado === true) {
-      success('Carro cadastrado', 'O carro foi cadastrado com sucesso!')
+      success(t('dashboard.carRegistered'), t('dashboard.carRegisteredSuccess'))
     }
     setCarroEditando(null)
     carregarCarros()
   }
 
   const handleDeletarCarro = async (id) => {
-    if (window.confirm('Tem certeza que deseja deletar este carro?')) {
+    if (window.confirm(t('dashboard.deleteConfirm'))) {
       try {
         const params = {}
         // Se for admin e tiver empresa selecionada, passar como parâmetro
@@ -241,7 +245,7 @@ function Dashboard({ setIsAuthenticated }) {
         carregarCarros()
       } catch (error) {
         console.error('Erro ao deletar carro:', error)
-        alert('Erro ao deletar carro')
+        alert(t('dashboard.deleteError'))
       }
     }
   }
@@ -251,7 +255,6 @@ function Dashboard({ setIsAuthenticated }) {
       {/* Header */}
       <Header
         title="BANCO AI"
-        icon={FaCar}
         userRole={userRole}
         empresas={empresas}
         empresaSelecionada={empresaSelecionada}
@@ -268,21 +271,23 @@ function Dashboard({ setIsAuthenticated }) {
         <div className="mb-8 section-spacing">
           <button
             onClick={() => setShowFiltros(!showFiltros)}
-            className="btn-secondary flex items-center justify-center p-3 mb-4 pulse-on-hover"
+            className="btn-secondary flex items-center justify-center p-3 mb-4 pulse-on-hover min-h-[44px] min-w-[44px]"
             data-tooltip="Filtros de busca"
             aria-label="Mostrar/Ocultar filtros"
+            aria-expanded={showFiltros}
           >
             <FaFilter className="text-xl" />
+            <span className="ml-2 hidden sm:inline">{showFiltros ? t('dashboard.hideFilters') : t('dashboard.showFilters')}</span>
           </button>
 
           {showFiltros && (
-            <div className="glass-container p-4 mb-4 slide-up" style={{ zIndex: 40 }}>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+            <div className="glass-container p-4 md:p-6 mb-4 slide-up" style={{ zIndex: 40 }}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 mb-3">
                 <div className="flex items-center space-x-2">
-                  <FaCar className="text-gray-400" />
+                  <Logo className="text-gray-400 opacity-50" size="small" />
                   <input
                     type="text"
-                    placeholder="Placa"
+                    placeholder={t('dashboard.plate')}
                     value={filtros.placa}
                     onChange={(e) => handleFiltroChange('placa', e.target.value)}
                     className="input-enhanced flex-1 text-white"
@@ -290,14 +295,14 @@ function Dashboard({ setIsAuthenticated }) {
                 </div>
                 <input
                   type="text"
-                  placeholder="Modelo"
+                  placeholder={t('dashboard.model')}
                   value={filtros.modelo}
                   onChange={(e) => handleFiltroChange('modelo', e.target.value)}
                   className="input-enhanced text-white"
                 />
                 <input
                   type="text"
-                  placeholder="Marca"
+                  placeholder={t('dashboard.brand')}
                   value={filtros.marca}
                   onChange={(e) => handleFiltroChange('marca', e.target.value)}
                   className="input-enhanced text-white"
@@ -306,7 +311,7 @@ function Dashboard({ setIsAuthenticated }) {
                   <FaTachometerAlt className="text-gray-400" />
                   <input
                     type="number"
-                    placeholder="Quilometragem Mínima"
+                    placeholder={t('dashboard.minMileage')}
                     value={filtros.quilometragemMin}
                     onChange={(e) => handleFiltroChange('quilometragemMin', e.target.value)}
                     className="input-enhanced flex-1 text-white"
@@ -316,7 +321,7 @@ function Dashboard({ setIsAuthenticated }) {
                   <FaTachometerAlt className="text-gray-400" />
                   <input
                     type="number"
-                    placeholder="Quilometragem Máxima"
+                    placeholder={t('dashboard.maxMileage')}
                     value={filtros.quilometragemMax}
                     onChange={(e) => handleFiltroChange('quilometragemMax', e.target.value)}
                     className="input-enhanced flex-1 text-white"
@@ -326,7 +331,7 @@ function Dashboard({ setIsAuthenticated }) {
                   <span className="text-gray-400">R$</span>
                   <input
                     type="number"
-                    placeholder="Valor Mínimo"
+                    placeholder={t('dashboard.minValue')}
                     value={filtros.valorMin}
                     onChange={(e) => handleFiltroChange('valorMin', e.target.value)}
                     min="0"
@@ -338,7 +343,7 @@ function Dashboard({ setIsAuthenticated }) {
                   <span className="text-gray-400">R$</span>
                   <input
                     type="number"
-                    placeholder="Valor Máximo"
+                    placeholder={t('dashboard.maxValue')}
                     value={filtros.valorMax}
                     onChange={(e) => handleFiltroChange('valorMax', e.target.value)}
                     min="0"
@@ -350,7 +355,7 @@ function Dashboard({ setIsAuthenticated }) {
                   <FaCalendarAlt className="text-gray-400" />
                   <input
                     type="date"
-                    placeholder="Data de Cadastro"
+                    placeholder={t('dashboard.registrationDate')}
                     value={filtros.dataInicio}
                     onChange={(e) => handleFiltroChange('dataInicio', e.target.value)}
                     className="input-enhanced flex-1 text-white"
@@ -363,13 +368,13 @@ function Dashboard({ setIsAuthenticated }) {
                   className="btn-primary flex items-center space-x-2 text-sm px-4 py-2"
                 >
                   <FaSearch />
-                  <span>Buscar</span>
+                  <span>{t('dashboard.search')}</span>
                 </button>
                 <button
                   onClick={limparFiltros}
                   className="btn-secondary text-sm px-4 py-2"
                 >
-                  Limpar
+                  {t('dashboard.clear')}
                 </button>
               </div>
             </div>
@@ -377,32 +382,26 @@ function Dashboard({ setIsAuthenticated }) {
         </div>
 
         {loading ? (
-          <div className="grid-enhanced grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid-enhanced grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-6">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="skeleton-card">
-                <div className="skeleton-line h-48 mb-4"></div>
-                <div className="skeleton-line mb-2"></div>
-                <div className="skeleton-line short mb-4"></div>
-                <div className="skeleton-line medium mb-2"></div>
-                <div className="skeleton-line short"></div>
-              </div>
+              <SkeletonCard key={i} />
             ))}
           </div>
                ) : carros.length === 0 ? (
                  <div className="empty-state">
                    <div className="empty-state-icon">
-                     <FaCar className="text-6xl text-red-600" />
+                     <Logo className="text-red-600" size="xl" />
                    </div>
-                   <h2 className="empty-state-title text-white">Nenhum carro encontrado</h2>
+                   <h2 className="empty-state-title text-white">{t('dashboard.noCars')}</h2>
                    <p className="empty-state-description text-gray-400">
-                     Comece cadastrando seu primeiro veículo no sistema
+                     {t('dashboard.noCarsDescription')}
                    </p>
                    <div className="empty-state-action">
                      <button
                        onClick={handleNovoCarro}
                        className="btn-primary"
                      >
-                       Cadastrar Primeiro Carro
+                       {t('dashboard.registerFirstCar')}
                      </button>
                    </div>
                  </div>

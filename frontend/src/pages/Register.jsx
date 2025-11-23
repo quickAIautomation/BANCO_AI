@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import { setToken, setUserRole, setUserEmpresaId, setUserEmpresaNome, setSelectedEmpresaId } from '../utils/auth'
-import { FaCar } from 'react-icons/fa'
+import Logo from '../components/Logo'
+import { useTranslation } from '../hooks/useTranslation'
 
 function Register({ setIsAuthenticated }) {
   const [nome, setNome] = useState('')
@@ -13,6 +14,7 @@ function Register({ setIsAuthenticated }) {
   const [erro, setErro] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const { t } = useTranslation()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -20,12 +22,12 @@ function Register({ setIsAuthenticated }) {
 
     // Validações
     if (senha !== confirmarSenha) {
-      setErro('As senhas não coincidem')
+      setErro(t('register.passwordMismatch'))
       return
     }
 
     if (senha.length < 6) {
-      setErro('A senha deve ter no mínimo 6 caracteres')
+      setErro(t('register.passwordMinLength'))
       return
     }
 
@@ -61,8 +63,8 @@ function Register({ setIsAuthenticated }) {
       const errorMessage = error.response?.data?.message || 
                           error.response?.data || 
                           error.message || 
-                          'Erro ao criar conta. Tente novamente.'
-      setErro(typeof errorMessage === 'string' ? errorMessage : 'Erro ao criar conta. Tente novamente.')
+                          t('register.error')
+      setErro(typeof errorMessage === 'string' ? errorMessage : t('register.error'))
     } finally {
       setLoading(false)
     }
@@ -73,14 +75,14 @@ function Register({ setIsAuthenticated }) {
       <div className="w-full max-w-md">
         <div className="text-center mb-6 md:mb-8">
           <div className="flex items-center justify-center mb-4">
-            <FaCar className="text-red-600 text-4xl md:text-6xl" />
+            <Logo className="text-red-600" size="xl" />
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">BANCO AI</h1>
-          <p className="text-gray-400 text-sm md:text-base">Criar Nova Conta</p>
+          <p className="text-gray-400 text-sm md:text-base">{t('register.title')}</p>
         </div>
 
         <div className="bg-white rounded-lg shadow-lg p-6 md:p-8">
-          <h2 className="text-xl md:text-2xl font-bold text-black mb-6 text-center">Criar Conta Administrador</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-black mb-6 text-center">{t('register.adminAccount')}</h2>
           
           {erro && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -91,7 +93,7 @@ function Register({ setIsAuthenticated }) {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="nome" className="block text-sm font-medium text-black mb-2">
-                Nome Completo *
+                {t('register.fullName')}
               </label>
               <input
                 type="text"
@@ -100,13 +102,13 @@ function Register({ setIsAuthenticated }) {
                 onChange={(e) => setNome(e.target.value)}
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent text-black"
-                placeholder="Seu nome completo"
+                placeholder={t('register.fullNamePlaceholder')}
               />
             </div>
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-black mb-2">
-                Email *
+                {t('register.email')}
               </label>
               <input
                 type="email"
@@ -115,13 +117,13 @@ function Register({ setIsAuthenticated }) {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent text-black"
-                placeholder="seu@email.com"
+                placeholder={t('register.emailPlaceholder')}
               />
             </div>
 
             <div>
               <label htmlFor="nomeEmpresa" className="block text-sm font-medium text-black mb-2">
-                Nome da Empresa *
+                {t('register.companyName')}
               </label>
               <input
                 type="text"
@@ -130,13 +132,13 @@ function Register({ setIsAuthenticated }) {
                 onChange={(e) => setNomeEmpresa(e.target.value)}
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent text-black"
-                placeholder="Nome da sua empresa"
+                placeholder={t('register.companyNamePlaceholder')}
               />
             </div>
 
             <div>
               <label htmlFor="senha" className="block text-sm font-medium text-black mb-2">
-                Senha *
+                {t('register.password')}
               </label>
               <input
                 type="password"
@@ -146,13 +148,13 @@ function Register({ setIsAuthenticated }) {
                 required
                 minLength={6}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent text-black"
-                placeholder="Mínimo 6 caracteres"
+                placeholder={t('register.passwordPlaceholder')}
               />
             </div>
 
             <div>
               <label htmlFor="confirmarSenha" className="block text-sm font-medium text-black mb-2">
-                Confirmar Senha *
+                {t('register.confirmPassword')}
               </label>
               <input
                 type="password"
@@ -162,7 +164,7 @@ function Register({ setIsAuthenticated }) {
                 required
                 minLength={6}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent text-black"
-                placeholder="Digite a senha novamente"
+                placeholder={t('register.confirmPasswordPlaceholder')}
               />
             </div>
 
@@ -171,19 +173,19 @@ function Register({ setIsAuthenticated }) {
               disabled={loading}
               className="w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Criando conta...' : 'Criar Conta'}
+              {loading ? t('register.submitting') : t('register.submit')}
             </button>
           </form>
 
           <div className="mt-4 text-center space-y-2">
             <p className="text-sm text-gray-600">
-              Já tem uma conta?{' '}
+              {t('register.hasAccount')}{' '}
               <button
                 type="button"
                 onClick={() => navigate('/login')}
                 className="text-red-600 hover:text-red-700 hover:underline font-medium"
               >
-                Fazer Login
+                {t('register.doLogin')}
               </button>
             </p>
             <p className="text-sm text-gray-600">
@@ -192,15 +194,15 @@ function Register({ setIsAuthenticated }) {
                 onClick={() => navigate('/recursos')}
                 className="text-red-600 hover:text-red-700 hover:underline"
               >
-                Ver Recursos da Plataforma
+                {t('register.viewResources')}
               </button>
             </p>
           </div>
 
           <div className="mt-4 text-center text-xs md:text-sm text-gray-600">
-            <p className="font-semibold">Ao criar a conta, você será:</p>
-            <p className="text-red-600 font-bold">Administrador (ADMIN)</p>
-            <p className="mt-2">Uma nova empresa será criada automaticamente com o nome informado.</p>
+            <p className="font-semibold">{t('register.willBeAdmin')}</p>
+            <p className="text-red-600 font-bold">{t('register.adminRole')}</p>
+            <p className="mt-2">{t('register.companyCreated')}</p>
           </div>
         </div>
       </div>
