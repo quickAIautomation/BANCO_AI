@@ -36,17 +36,18 @@ export default function LanguageSelector({ className = '' }) {
     <div className={`relative ${className}`} ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`btn-secondary flex items-center space-x-2 text-sm px-3 py-2 min-w-[140px] justify-between ${
+        className={`btn-secondary flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2 min-w-[80px] sm:min-w-[140px] justify-between ${
           isDark ? 'bg-gray-800 text-white border-gray-700' : 'bg-white text-gray-900 border-gray-300'
         }`}
       >
-        <div className="flex items-center space-x-2 flex-1 min-w-0">
-          <FaGlobe className="text-red-600 flex-shrink-0" />
-          <span className="truncate">
-            {currentLanguage.flag} {currentLanguage.label}
+        <div className="flex items-center space-x-1 sm:space-x-2 flex-1 min-w-0">
+          <FaGlobe className="text-red-600 flex-shrink-0 text-xs sm:text-sm" />
+          <span className="truncate text-xs sm:text-sm">
+            <span className="sm:hidden">{currentLanguage.flag}</span>
+            <span className="hidden sm:inline">{currentLanguage.flag} {currentLanguage.label}</span>
           </span>
         </div>
-        <FaChevronDown className={`text-xs transition-transform flex-shrink-0 ml-2 ${isOpen ? 'transform rotate-180' : ''}`} />
+        <FaChevronDown className={`text-xs transition-transform flex-shrink-0 ml-1 sm:ml-2 ${isOpen ? 'transform rotate-180' : ''}`} />
       </button>
       
       {isOpen && (
