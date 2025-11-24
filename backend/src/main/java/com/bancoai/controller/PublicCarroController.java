@@ -225,7 +225,7 @@ public class PublicCarroController {
      * Requer autenticação via X-API-Key no header
      * 
      * Exemplo de uso para agente de IA:
-     * POST https://bancoai.com.br/api/public/carros/buscar
+     * POST https://bancoai.com.br/api/public/carros/buscar?empresaId=1
      * Header: X-API-Key: sua_chave_api_aqui
      * Content-Type: application/json
      * Body: {
@@ -239,6 +239,7 @@ public class PublicCarroController {
      * }
      * 
      * Filtros disponíveis:
+     * - empresaId: Long (query parameter - filtra carros do catálogo da empresa escolhida)
      * - placa: String (busca parcial, case-insensitive)
      * - modelo: String (busca parcial, case-insensitive)
      * - marca: String (busca parcial, case-insensitive)
@@ -254,12 +255,14 @@ public class PublicCarroController {
      * - tamanho: Integer (padrão: 20)
      * 
      * @param buscaDTO DTO com os filtros de busca
+     * @param empresaId ID da empresa para filtrar (opcional - se fornecido, filtra apenas carros dessa empresa)
      * @param request HttpServletRequest para obter a URL base
      * @return Página de carros que correspondem aos filtros
      */
     @PostMapping("/buscar")
     public ResponseEntity<?> buscarComFiltros(
             @RequestBody(required = false) BuscaCarroDTO buscaDTO,
+            @RequestParam(value = "empresaId", required = false) Long empresaId,
             HttpServletRequest request) {
         try {
             // Validar se buscaDTO foi recebido
@@ -267,7 +270,12 @@ public class PublicCarroController {
                 buscaDTO = new BuscaCarroDTO(); // Buscar todos se não fornecido
             }
             
-            // Buscar carros com filtros (sem restrição de empresa)
+            // Se empresaId foi fornecido na URL, aplicar o filtro (igual ao catálogo)
+            if (empresaId != null) {
+                buscaDTO.setEmpresaId(empresaId);
+            }
+            
+            // Buscar carros com filtros (com restrição de empresa se empresaId fornecido)
             Page<CarroDTO> carrosPage = carroService.buscarComFiltrosPublico(buscaDTO);
             
             // Adicionar URLs completas das fotos

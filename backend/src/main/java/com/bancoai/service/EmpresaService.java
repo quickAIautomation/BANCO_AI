@@ -2,6 +2,7 @@ package com.bancoai.service;
 
 import com.bancoai.dto.BuscaEmpresaDTO;
 import com.bancoai.dto.EmpresaDTO;
+import com.bancoai.model.Carro;
 import com.bancoai.model.Empresa;
 import com.bancoai.repository.CarroRepository;
 import com.bancoai.repository.EmpresaRepository;
@@ -13,6 +14,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,6 +29,7 @@ public class EmpresaService {
     private final UsuarioRepository usuarioRepository;
     private final CarroRepository carroRepository;
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    private final String uploadDir = "uploads/carros";
     
     public EmpresaService(EmpresaRepository empresaRepository, 
                           UsuarioRepository usuarioRepository,
@@ -168,9 +174,61 @@ public class EmpresaService {
         Empresa empresa = empresaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
         
-        // Desativar ao invés de deletar
-        empresa.setAtiva(false);
-        empresaRepository.save(empresa);
+        // Deletar todos os carros da empresa antes de deletar a empresa
+        deletarTodosCarrosDaEmpresa(id);
+        
+        // Verificar se há usuários com essa empresa como principal
+        List<com.bancoai.model.Usuario> usuariosComEmpresaPrincipal = usuarioRepository.findByEmpresaId(id);
+        if (!usuariosComEmpresaPrincipal.isEmpty()) {
+            throw new RuntimeException("Não é possível deletar a empresa. Existem " + usuariosComEmpresaPrincipal.size() + " usuário(s) com esta empresa como principal. Altere a empresa principal dos usuários primeiro.");
+        }
+        
+        // Remover relacionamentos Many-to-Many da tabela usuario_empresas
+        empresaRepository.deletarRelacionamentosUsuarioEmpresa(id);
+        
+        // Deletar a empresa do banco de dados
+        empresaRepository.delete(empresa);
+        empresaRepository.flush(); // Força a execução imediata do delete
+    }
+    
+    /**
+     * Deleta todos os carros de uma empresa, incluindo suas fotos do sistema de arquivos
+     */
+    private void deletarTodosCarrosDaEmpresa(Long empresaId) {
+        List<Carro> carros = carroRepository.findByEmpresaId(empresaId);
+        
+        for (Carro carro : carros) {
+            // Deletar fotos do sistema de arquivos
+            deletarFotosDoCarro(carro.getFotos());
+            
+            // Limpar a coleção de fotos antes de deletar
+            carro.getFotos().clear();
+            carroRepository.saveAndFlush(carro);
+            
+            // Deletar o carro
+            carroRepository.delete(carro);
+        }
+        
+        carroRepository.flush(); // Força a execução imediata dos deletes
+    }
+    
+    /**
+     * Deleta as fotos do sistema de arquivos
+     */
+    private void deletarFotosDoCarro(List<String> fotoUrls) {
+        if (fotoUrls == null || fotoUrls.isEmpty()) {
+            return;
+        }
+        
+        fotoUrls.forEach(url -> {
+            try {
+                String nomeArquivo = url.substring(url.lastIndexOf("/") + 1);
+                Path caminhoArquivo = Paths.get(uploadDir, nomeArquivo);
+                Files.deleteIfExists(caminhoArquivo);
+            } catch (IOException e) {
+                System.err.println("Erro ao deletar foto: " + url + " - " + e.getMessage());
+            }
+        });
     }
     
     @Transactional
@@ -178,11 +236,8 @@ public class EmpresaService {
         Empresa empresa = empresaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
         
-        // Verificar se há carros associados
-        long totalCarros = carroRepository.countByEmpresaId(id);
-        if (totalCarros > 0) {
-            throw new RuntimeException("Não é possível remover a empresa. Existem " + totalCarros + " carro(s) associado(s). Remova os carros primeiro ou desative a empresa.");
-        }
+        // Deletar todos os carros da empresa antes de deletar a empresa
+        deletarTodosCarrosDaEmpresa(id);
         
         // Verificar se há usuários com essa empresa como principal
         List<com.bancoai.model.Usuario> usuariosComEmpresaPrincipal = usuarioRepository.findByEmpresaId(id);
@@ -196,6 +251,7 @@ public class EmpresaService {
         
         // Remover a empresa
         empresaRepository.delete(empresa);
+        empresaRepository.flush(); // Força a execução imediata do delete
     }
     
     private EmpresaDTO converterParaDTO(Empresa empresa) {
