@@ -307,7 +307,13 @@ public class CarroService {
         // Deletar fotos do sistema de arquivos
         deletarFotos(carro.getFotos());
         
+        // Limpar a coleção de fotos antes de deletar (garante que a tabela carro_fotos seja limpa)
+        carro.getFotos().clear();
+        carroRepository.saveAndFlush(carro);
+        
+        // Deletar o carro do banco de dados
         carroRepository.delete(carro);
+        carroRepository.flush(); // Força a execução imediata do delete
         
         // Registrar auditoria
         auditoriaService.registrarAcao("DELETE", "CARRO", id, usuarioEmail, empresaId, 
