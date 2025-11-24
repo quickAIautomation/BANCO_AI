@@ -180,24 +180,24 @@ function Recursos() {
       <header className={`${isDark ? 'bg-black/95' : 'bg-white/95'} backdrop-blur-sm border-b ${isDark ? 'border-red-600/30' : 'border-red-600/20'} fixed top-0 left-0 right-0 z-50 transition-transform duration-300 will-change-transform ${
         isScrolled ? '-translate-y-full' : 'translate-y-0'
       }`}>
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Logo className="text-red-600" size="default" />
-              <h1 className={`text-xl md:text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>BANCO AI</h1>
+        <div className="container mx-auto px-2 sm:px-3 md:px-4 py-2.5 sm:py-3 md:py-4">
+          <div className="flex items-center justify-between gap-1 sm:gap-2">
+            <div className="flex items-center space-x-1 sm:space-x-1.5 md:space-x-2 lg:space-x-3 flex-shrink-0">
+              <Logo className="text-red-600 flex-shrink-0" size="default" />
+              <h1 className={`text-xs sm:text-sm md:text-base lg:text-xl xl:text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} whitespace-nowrap`}>BANCO AI</h1>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-1 sm:space-x-1.5 md:space-x-2 lg:space-x-4 flex-shrink-0 min-w-0">
               {/* Seletor de Idioma */}
               <LanguageSelector />
               <button
                 onClick={() => navigate('/login')}
-                className={`${isDark ? 'text-white hover:text-red-600' : 'text-gray-700 hover:text-red-600'} transition-colors text-sm md:text-base`}
+                className={`${isDark ? 'text-white hover:text-red-600' : 'text-gray-700 hover:text-red-600'} transition-colors text-[10px] sm:text-xs md:text-sm lg:text-base whitespace-nowrap`}
               >
                 {t('resources.login')}
               </button>
               <button
                 onClick={() => navigate('/register')}
-                className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors text-sm md:text-base"
+                className="bg-red-600 text-white px-1.5 sm:px-2 md:px-3 lg:px-4 py-1 sm:py-1.5 md:py-2 rounded-md hover:bg-red-700 transition-colors text-[10px] sm:text-xs md:text-sm lg:text-base whitespace-nowrap"
               >
                 {t('resources.createAccount')}
               </button>
@@ -207,28 +207,28 @@ function Recursos() {
       </header>
 
       {/* Hero Section com Parallax */}
-      <section className="container mx-auto px-4 py-16 md:py-24 pt-32 md:pt-40 text-center parallax-container">
-        <div className="flex items-center justify-center mb-6 parallax-element" style={{ transform: 'translateY(0)' }}>
+      <section className="container mx-auto px-4 py-12 sm:py-16 md:py-24 pt-24 sm:pt-32 md:pt-40 text-center parallax-container">
+        <div className="flex items-center justify-center mb-4 sm:mb-6 parallax-element" style={{ transform: 'translateY(0)' }}>
           <Logo className="text-red-600 animate-pulse" size="xl" />
         </div>
-        <div className="mb-10 md:mb-14">
-          <h2 className={`text-4xl md:text-6xl font-bold gradient-text ${isDark ? '' : 'text-gray-900'} relative z-10`} style={{ lineHeight: '1.2', paddingBottom: '1rem' }}>
+        <div className="mb-6 sm:mb-10 md:mb-14 px-2">
+          <h2 className={`text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-bold gradient-text ${isDark ? '' : 'text-gray-900'} relative z-10 leading-tight`} style={{ lineHeight: '1.2', paddingBottom: '0.5rem' }}>
             {t('resources.title')}
           </h2>
         </div>
-        <p className={`text-xl md:text-2xl mb-8 max-w-3xl mx-auto ${isDark ? 'text-gray-400' : 'text-gray-600'} relative z-10`}>
+        <p className={`text-base sm:text-lg md:text-xl lg:text-2xl mb-6 sm:mb-8 max-w-3xl mx-auto px-2 ${isDark ? 'text-gray-400' : 'text-gray-600'} relative z-10 leading-relaxed`}>
           {t('resources.subtitle')}
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
           <button
             onClick={() => navigate('/register')}
-            className="bg-red-600 text-white px-8 py-3 rounded-md hover:bg-red-700 transition-all text-lg font-semibold transform hover:scale-105 shadow-lg hover:shadow-xl"
+            className="bg-red-600 text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-md hover:bg-red-700 transition-all text-base sm:text-lg font-semibold transform hover:scale-105 shadow-lg hover:shadow-xl w-full sm:w-auto"
           >
             {t('resources.startNow')}
           </button>
           <button
             onClick={() => navigate('/login')}
-            className={`${isDark ? 'bg-gray-800 text-white hover:bg-gray-700 border-gray-700' : 'bg-gray-200 text-gray-900 hover:bg-gray-300 border-gray-300'} px-8 py-3 rounded-md transition-all text-lg font-semibold border`}
+            className={`${isDark ? 'bg-gray-800 text-white hover:bg-gray-700 border-gray-700' : 'bg-gray-200 text-gray-900 hover:bg-gray-300 border-gray-300'} px-6 sm:px-8 py-2.5 sm:py-3 rounded-md transition-all text-base sm:text-lg font-semibold border w-full sm:w-auto`}
           >
             {t('resources.haveAccount')}
           </button>
