@@ -23,6 +23,8 @@ function Dashboard({ setIsAuthenticated }) {
     placa: '',
     modelo: '',
     marca: '',
+    anoMin: '',
+    anoMax: '',
     quilometragemMin: '',
     quilometragemMax: '',
     valorMin: '',
@@ -307,6 +309,30 @@ function Dashboard({ setIsAuthenticated }) {
                   onChange={(e) => handleFiltroChange('marca', e.target.value)}
                   className="input-enhanced text-white"
                 />
+                <div className="flex items-center space-x-2">
+                  <FaCalendarAlt className="text-gray-400" />
+                  <input
+                    type="number"
+                    placeholder={t('dashboard.minYear')}
+                    value={filtros.anoMin}
+                    onChange={(e) => handleFiltroChange('anoMin', e.target.value)}
+                    className="input-enhanced flex-1 text-white"
+                    min="1900"
+                    max="2030"
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <FaCalendarAlt className="text-gray-400" />
+                  <input
+                    type="number"
+                    placeholder={t('dashboard.maxYear')}
+                    value={filtros.anoMax}
+                    onChange={(e) => handleFiltroChange('anoMax', e.target.value)}
+                    className="input-enhanced flex-1 text-white"
+                    min="1900"
+                    max="2030"
+                  />
+                </div>
                 <div className="flex items-center space-x-2">
                   <FaTachometerAlt className="text-gray-400" />
                   <input

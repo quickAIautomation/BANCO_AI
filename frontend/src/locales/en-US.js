@@ -71,6 +71,8 @@ export default {
   'dashboard.plate': 'Plate',
   'dashboard.model': 'Model',
   'dashboard.brand': 'Brand',
+  'dashboard.minYear': 'Min Year',
+  'dashboard.maxYear': 'Max Year',
   'dashboard.minMileage': 'Min Mileage',
   'dashboard.maxMileage': 'Max Mileage',
   'dashboard.minValue': 'Min Value',

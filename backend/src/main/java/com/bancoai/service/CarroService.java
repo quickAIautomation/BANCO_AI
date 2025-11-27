@@ -70,12 +70,18 @@ public class CarroService {
             throw new RuntimeException("Já existe um carro cadastrado com esta placa nesta empresa");
         }
         
+        // Validar limite de fotos
+        if (fotos != null && fotos.size() > 20) {
+            throw new RuntimeException("Máximo de 20 fotos permitidas por carro");
+        }
+        
         Carro carro = new Carro();
         carro.setEmpresa(empresa);
         carro.setPlaca(carroDTO.getPlaca().toUpperCase());
         carro.setQuilometragem(carroDTO.getQuilometragem());
         carro.setModelo(carroDTO.getModelo());
         carro.setMarca(carroDTO.getMarca());
+        carro.setAno(carroDTO.getAno());
         carro.setValor(carroDTO.getValor());
         carro.setObservacoes(carroDTO.getObservacoes());
         
@@ -133,10 +139,18 @@ public class CarroService {
         carro.setQuilometragem(carroDTO.getQuilometragem());
         carro.setModelo(carroDTO.getModelo());
         carro.setMarca(carroDTO.getMarca());
+        carro.setAno(carroDTO.getAno());
         carro.setValor(carroDTO.getValor());
         carro.setObservacoes(carroDTO.getObservacoes());
         
         if (novasFotos != null && !novasFotos.isEmpty()) {
+            // Validar limite total de fotos (existentes + novas)
+            int totalFotos = carro.getFotos().size() + novasFotos.size();
+            if (totalFotos > 20) {
+                throw new RuntimeException("Máximo de 20 fotos permitidas por carro. Atualmente: " + 
+                                         carro.getFotos().size() + ", tentando adicionar: " + novasFotos.size());
+            }
+            
             List<String> fotoUrls = salvarFotos(novasFotos, carro.getPlaca());
             carro.getFotos().addAll(fotoUrls);
         }
@@ -166,6 +180,8 @@ public class CarroService {
         System.out.println("Placa: " + buscaDTO.getPlaca());
         System.out.println("Modelo: " + buscaDTO.getModelo());
         System.out.println("Marca: " + buscaDTO.getMarca());
+        System.out.println("AnoMin: " + buscaDTO.getAnoMin());
+        System.out.println("AnoMax: " + buscaDTO.getAnoMax());
         System.out.println("QuilometragemMin: " + buscaDTO.getQuilometragemMin());
         System.out.println("QuilometragemMax: " + buscaDTO.getQuilometragemMax());
         System.out.println("ValorMin: " + buscaDTO.getValorMin());
@@ -211,6 +227,15 @@ public class CarroService {
                 String marcaUpper = "%" + buscaDTO.getMarca().trim().toUpperCase() + "%";
                 predicates.add(cb.like(cb.upper(root.get("marca")), marcaUpper));
                 System.out.println("Filtro MARCA aplicado: " + marcaUpper);
+            }
+            
+            // Filtros de ano
+            if (buscaDTO.getAnoMin() != null && buscaDTO.getAnoMin() > 0) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("ano"), buscaDTO.getAnoMin()));
+            }
+            
+            if (buscaDTO.getAnoMax() != null && buscaDTO.getAnoMax() > 0) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("ano"), buscaDTO.getAnoMax()));
             }
             
             // Ignorar valores <= 0 (tratados como "sem filtro")
@@ -320,6 +345,73 @@ public class CarroService {
                                      dadosAnteriores, null, "Carro deletado");
     }
     
+    @Transactional
+    public CarroDTO reordenarFotos(Long id, List<String> fotosOrdenadas, Long empresaId, String usuarioEmail) {
+        Carro carro = carroRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Carro não encontrado"));
+        
+        if (!carro.getEmpresa().getId().equals(empresaId)) {
+            throw new RuntimeException("Carro não pertence a esta empresa");
+        }
+        
+        // Validar se todas as fotos fornecidas existem no carro
+        List<String> fotosAtuais = carro.getFotos();
+        if (fotosOrdenadas.size() != fotosAtuais.size() || 
+            !fotosAtuais.containsAll(fotosOrdenadas)) {
+            throw new RuntimeException("Lista de fotos inválida");
+        }
+        
+        // Salvar dados anteriores para auditoria
+        CarroDTO dadosAnteriores = converterParaDTO(carro);
+        
+        // Atualizar ordem das fotos
+        carro.getFotos().clear();
+        carro.getFotos().addAll(fotosOrdenadas);
+        
+        Carro carroAtualizado = carroRepository.save(carro);
+        
+        // Registrar auditoria
+        auditoriaService.registrarAcao("UPDATE", "CARRO", carroAtualizado.getId(), 
+                                     usuarioEmail, empresaId, dadosAnteriores, 
+                                     converterParaDTO(carroAtualizado), 
+                                     "Ordem das fotos alterada");
+        
+        return converterParaDTO(carroAtualizado);
+    }
+    
+    @Transactional
+    public CarroDTO removerFoto(Long id, String fotoUrl, Long empresaId, String usuarioEmail) {
+        Carro carro = carroRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Carro não encontrado"));
+        
+        if (!carro.getEmpresa().getId().equals(empresaId)) {
+            throw new RuntimeException("Carro não pertence a esta empresa");
+        }
+        
+        if (!carro.getFotos().contains(fotoUrl)) {
+            throw new RuntimeException("Foto não encontrada neste carro");
+        }
+        
+        // Salvar dados anteriores para auditoria
+        CarroDTO dadosAnteriores = converterParaDTO(carro);
+        
+        // Remover foto da lista
+        carro.getFotos().remove(fotoUrl);
+        
+        // Deletar arquivo físico
+        deletarFoto(fotoUrl);
+        
+        Carro carroAtualizado = carroRepository.save(carro);
+        
+        // Registrar auditoria
+        auditoriaService.registrarAcao("UPDATE", "CARRO", carroAtualizado.getId(), 
+                                     usuarioEmail, empresaId, dadosAnteriores, 
+                                     converterParaDTO(carroAtualizado), 
+                                     "Foto removida: " + fotoUrl);
+        
+        return converterParaDTO(carroAtualizado);
+    }
+    
     private List<String> salvarFotos(List<MultipartFile> fotos, String placa) {
         return fotos.stream()
                 .filter(foto -> !foto.isEmpty())
@@ -344,15 +436,17 @@ public class CarroService {
     }
     
     private void deletarFotos(List<String> fotoUrls) {
-        fotoUrls.forEach(url -> {
-            try {
-                String nomeArquivo = url.substring(url.lastIndexOf("/") + 1);
-                Path caminhoArquivo = Paths.get(uploadDir, nomeArquivo);
-                Files.deleteIfExists(caminhoArquivo);
-            } catch (IOException e) {
-                System.err.println("Erro ao deletar foto: " + url);
-            }
-        });
+        fotoUrls.forEach(this::deletarFoto);
+    }
+    
+    private void deletarFoto(String fotoUrl) {
+        try {
+            String nomeArquivo = fotoUrl.substring(fotoUrl.lastIndexOf("/") + 1);
+            Path caminhoArquivo = Paths.get(uploadDir, nomeArquivo);
+            Files.deleteIfExists(caminhoArquivo);
+        } catch (IOException e) {
+            System.err.println("Erro ao deletar foto: " + fotoUrl);
+        }
     }
     
     private CarroDTO converterParaDTO(Carro carro) {
@@ -365,6 +459,7 @@ public class CarroService {
         dto.setQuilometragem(carro.getQuilometragem());
         dto.setModelo(carro.getModelo());
         dto.setMarca(carro.getMarca());
+        dto.setAno(carro.getAno());
         dto.setValor(carro.getValor());
         dto.setObservacoes(carro.getObservacoes());
         dto.setFotos(carro.getFotos());

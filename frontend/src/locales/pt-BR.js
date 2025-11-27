@@ -71,6 +71,8 @@ export default {
   'dashboard.plate': 'Placa',
   'dashboard.model': 'Modelo',
   'dashboard.brand': 'Marca',
+  'dashboard.minYear': 'Ano Mínimo',
+  'dashboard.maxYear': 'Ano Máximo',
   'dashboard.minMileage': 'Quilometragem Mínima',
   'dashboard.maxMileage': 'Quilometragem Máxima',
   'dashboard.minValue': 'Valor Mínimo',

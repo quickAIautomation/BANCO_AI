@@ -41,7 +41,7 @@ function CarroCard({ carro, onEdit, onDelete, canEdit = true, canDelete = true }
           <>
             <img 
               src={fotoExibida} 
-              alt={`${carro.marca} ${carro.modelo} - Foto ${fotoAtual + 1}`}
+              alt={`${carro.marca} ${carro.modelo} ${carro.ano ? carro.ano : ''} - Foto ${fotoAtual + 1}`}
               className="w-full h-full object-cover transition-opacity duration-300"
               loading="lazy"
               decoding="async"
@@ -109,7 +109,7 @@ function CarroCard({ carro, onEdit, onDelete, canEdit = true, canDelete = true }
       <div className="p-6">
         <div className="mb-4">
           <h3 className="text-xl font-bold text-white mb-2">
-            {carro.marca} {carro.modelo}
+            {carro.marca} {carro.modelo} {carro.ano && `(${carro.ano})`}
           </h3>
           <p className="text-red-500 font-semibold text-base">Placa: {carro.placa}</p>
         </div>
