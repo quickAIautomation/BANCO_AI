@@ -143,6 +143,8 @@ function Dashboard({ setIsAuthenticated }) {
         placa: filtros.placa && filtros.placa.trim() !== '' ? filtros.placa.trim() : null,
         modelo: filtros.modelo && filtros.modelo.trim() !== '' ? filtros.modelo.trim() : null,
         marca: filtros.marca && filtros.marca.trim() !== '' ? filtros.marca.trim() : null,
+        anoMin: filtros.anoMin && filtros.anoMin !== '' ? parseInt(filtros.anoMin) : null,
+        anoMax: filtros.anoMax && filtros.anoMax !== '' ? parseInt(filtros.anoMax) : null,
         quilometragemMin: filtros.quilometragemMin && filtros.quilometragemMin !== '' ? parseInt(filtros.quilometragemMin) : null,
         quilometragemMax: filtros.quilometragemMax && filtros.quilometragemMax !== '' ? parseInt(filtros.quilometragemMax) : null,
         valorMin: filtros.valorMin && filtros.valorMin !== '' ? parseFloat(filtros.valorMin) : null,
