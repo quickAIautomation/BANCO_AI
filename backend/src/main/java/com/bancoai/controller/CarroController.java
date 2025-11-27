@@ -2,6 +2,7 @@ package com.bancoai.controller;
 
 import com.bancoai.dto.BuscaCarroDTO;
 import com.bancoai.dto.CarroDTO;
+import com.bancoai.dto.OrdemFotosDTO;
 import com.bancoai.service.CarroService;
 import com.bancoai.service.UsuarioService;
 import org.springframework.core.io.Resource;
@@ -169,6 +170,46 @@ public class CarroController {
         }
     }
     
+    @PutMapping("/{id}/reordenar-fotos")
+    public ResponseEntity<CarroDTO> reordenarFotos(
+            @PathVariable Long id,
+            @RequestBody OrdemFotosDTO ordemFotosDTO,
+            @RequestParam(value = "empresaId", required = false) Long empresaIdSelecionada,
+            Authentication authentication) {
+        try {
+            String email = authentication.getName();
+            if (!usuarioService.podeEditar(email)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            Long empresaId = obterEmpresaIdParaFiltro(authentication, empresaIdSelecionada);
+            String usuarioEmail = authentication.getName();
+            CarroDTO carroAtualizado = carroService.reordenarFotos(id, ordemFotosDTO.getFotosOrdenadas(), empresaId, usuarioEmail);
+            return ResponseEntity.ok(carroAtualizado);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+    
+    @DeleteMapping("/{id}/fotos")
+    public ResponseEntity<CarroDTO> removerFoto(
+            @PathVariable Long id,
+            @RequestParam String fotoUrl,
+            @RequestParam(value = "empresaId", required = false) Long empresaIdSelecionada,
+            Authentication authentication) {
+        try {
+            String email = authentication.getName();
+            if (!usuarioService.podeEditar(email)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            Long empresaId = obterEmpresaIdParaFiltro(authentication, empresaIdSelecionada);
+            String usuarioEmail = authentication.getName();
+            CarroDTO carroAtualizado = carroService.removerFoto(id, fotoUrl, empresaId, usuarioEmail);
+            return ResponseEntity.ok(carroAtualizado);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
     @GetMapping("/fotos/{nomeArquivo}")
     public ResponseEntity<Resource> obterFoto(@PathVariable String nomeArquivo) {
         try {

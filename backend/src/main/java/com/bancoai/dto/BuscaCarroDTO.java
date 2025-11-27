@@ -10,6 +10,8 @@ public class BuscaCarroDTO {
     private String placa;
     private String modelo;
     private String marca;
+    private Integer anoMin;
+    private Integer anoMax;
     private Integer quilometragemMin;
     private Integer quilometragemMax;
     private java.math.BigDecimal valorMin;
